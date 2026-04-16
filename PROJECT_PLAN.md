@@ -1,809 +1,325 @@
 # Lifestyle-Based Obesity Risk Prediction System
-## End-to-End ML Capstone Project Plan
+## 2-Week Sprint Plan 
 
-**Project Timeline:** April 15 – April 28, 2026 (2 weeks)  
-**Project Type:** Healthcare Machine Learning Capstone  
-**Target Audience:** Healthcare professionals, data scientists, ML engineers
-
----
-
-## 1. Problem Definition
-
-### 1.1 Problem Statement
-
-**Objective:** Build a predictive machine learning model to identify individuals at risk of obesity based on lifestyle and socioeconomic factors from the NHANES (National Health and Nutrition Examination Survey) dataset.
-
-**Business Goal:** Enable early intervention and personalized health recommendations by predicting obesity risk (BMI ≥ 30) before clinical diagnosis.
-
-### 1.2 Input Features & Target Variable
-
-| Feature | NHANES Code | Description |
-|---------|-------------|-------------|
-| **Age** | RIDAGEYR | Age in years |
-| **Gender** | RIAGENDR | 1=Male, 2=Female (encoded to 0/1) |
-| **Vigorous Activity** | PAQ605 | Minutes/week of vigorous activity |
-| **Moderate Activity** | PAQ620 | Minutes/week of moderate activity |
-| **Sleep Duration** | SLD012 | Hours of sleep |
-| **Alcohol Use** | ALQ111 | Current/former drinker (binary) |
-| **BP Status** | BPQ020 | Doctor told you have high BP (binary) |
-| **Income-to-Poverty Ratio** | INDFMMPI | Continuous socioeconomic indicator |
-
-**Target Variable:** Obesity Risk (Binary Classification)
-- `1` = Obese (BMI ≥ 30)
-- `0` = Non-Obese (BMI < 30)
-
-### 1.3 Healthcare Relevance & Impact
-
-- **Public Health Significance:** Obesity is a major risk factor for diabetes, cardiovascular disease, and metabolic syndrome
-- **Early Intervention:** Identifying at-risk individuals enables preventive lifestyle modifications
-- **Personalization:** Model can provide actionable insights tailored to individual profiles
-- **Scalability:** NHANES-based model is applicable to broader populations
-
-### 1.4 Limitations & Considerations
-
-- **Proxy Target:** Using BMI as proxy for obesity rather than clinical diagnosis (BMI has limitations for athletic individuals)
-- **NHANES Bias:** May not represent all populations equally; NHANES 2015-2018 data only
-- **Missing Data:** Not all participants have complete feature data across all waves
-- **Temporal Decay:** Cross-sectional data; no longitudinal causal relationships
-- **Feature Lag:** Lifestyle factors are self-reported and may have recall bias
+**Status:** Foundation complete | Ready for optimization & deployment  
+**Scope:** Features engineering, deployment, monitoring  
+**Last Updated:** April 15, 2026
 
 ---
 
-## 2. Dataset Overview
+## 1. Problem Definition & Business Context
 
-### 2.1 NHANES Dataset Description
+### What Are We Solving?
+Build an ML system to **predict obesity risk** in individuals based on lifestyle factors (physical activity, sleep, socioeconomic status) from NHANES data. Enable healthcare providers to identify at-risk patients early for personalized interventions.
 
-The National Health and Nutrition Examination Survey (NHANES) is conducted by the CDC and provides nationally representative data on health and nutrition across the U.S. population. Data includes:
-- In-home interviews
-- Medical examinations
-- Laboratory tests
-- Demographic information
+### Why These Metrics? (Business Impact)
 
-**Data Version:** 2015-2018 NHANES cycles  
-**Sample Size:** ~10,000 individuals per cycle (~20,000 combined)
+#### High Recall (≥60%) - Why We Prioritize This
+- **What it means:** Catch 6 out of 10 people actually at obesity risk
+- **Business impact:** Minimize false negatives—missing at-risk patients is costly (missed interventions, disease progression)
+- **Cost tradeoff:** Slightly higher false positives (some non-at-risk flagged), but acceptable for preventive health
+- **When recall is low:** Healthcare system misses intervention opportunities; preventable diseases develop
 
-### 2.2 Selected NHANES Components
+#### Balanced Accuracy (≥70%) & Precision (≥65%)
+- **Accuracy:** Overall system correctness across both groups
+- **Precision:** If model flags someone as at-risk, they're actually at-risk 65% of the time (trustworthy)
+- **Why balance?** Can't sacrifice precision too much or providers lose trust in recommendations
 
-| Component | Abbreviation | Key Variables |
-|-----------|--------------|---------------|
-| Demographics | DEMO | Age, Gender|
-| Body Measurements | BMX | BMI(used only to create target)|
-| Alcohol Use | ALQ | Alcohol consumption |
-| Physical Activity | PAQ | Vigorous/moderate activity minutes |
-| Income & Employment | INQ | Family income ratio |
-| Blood Pressure | BPQ | Blood pressure(Hypertension) |
+#### F1-Score (≥0.62) - Harmony Between Recall & Precision
+- Balances both metrics—ensures we catch patients WITHOUT crying wolf too much
 
-### 2.3 Key Features Used
-
-**Numeric Features:**
-- `RIDAGEYR` - Age (years)
-- `SLD012` - Sleep duration (hours)
-- `INDFMMPI` - Family income-to-poverty ratio
-
-**Categorical Features:**
-- `RIAGENDR` - Gender (Male=1, Female=2)
-- `ALQ111` - Alcohol use indicator
-- `PAQ605` - Vigorous activity
-- `PAQ620` - Moderate activity
-- `BPQ020` - Told had hypertension
-
-### 2.4 Data Challenges
-
-| Challenge | Impact | Solution Applied |
-|-----------|--------|------------------|
-| **Missing Values** | Variable across features (10-25%) | Imputation: median for SLD012, mean for INDFMMPI, category code for ALQ111 |
-| **Invalid Values** | Placeholder code (5.397605e-79) | Replaced with NaN |
-| **Cross-Module Merging** | Inconsistent participant IDs | Inner join on `SEQN` (kept only complete cases) |
-| **High Missing % Features** | ALQ130 had >30% missing | Column dropped from analysis |
-| **Class Imbalance** | ~35% obese, ~65% non-obese | Train-test split with 80-20 ratio |
-| **Categorical Encoding** | Object types not suitable for ML | Binary encoding: 1/2 → 0/1 for gender, binary indicators for alcohol & BP |
+### Dataset: NHANES 2015-2018
+- **Sample:** ~20,000 individuals across 2 cycles
+- **Features:** Age, gender, physical activity, sleep, alcohol use, hypertension status, income-to-poverty ratio
+- **Target:** Binary obesity classification (BMI ≥ 30)
 
 ---
 
-## 3. Detailed Timeline: April 15-28 (2 Weeks)
+## 2. Two-Week Sprint Overview
 
-### Status: Foundation Complete ✅
-- Model trained & evaluated
-- Ready for optimization & deployment
+This plan evolves as we learn. **Update weekly** when we discover changes.
 
----
+### Week 1: Model Optimization & Artifacts (Apr 15-21)
+- Optimize and validate model performance
+- Create versioned model artifacts & storage
+- Organize datasets with metadata
+- Set up git repository structure
 
-## WEEK 1: April 15-21 (Optimization, Features, & Artifacts)
-
-### Day 1: Monday, April 15 (6-7 hours)
-**Theme:** Model Optimization & Feature Analysis
-
-- **Task 1.1:** Advanced Feature Analysis (1.5 hrs)
-  - Correlation analysis between features
-  - Feature importance ranking (coefficients)
-  - Multicollinearity check (VIF calculation)
-  - Visualize top features vs obesity risk
-  
-- **Task 1.2:** Hyperparameter Tuning (2 hrs)
-  - Grid search for Logistic Regression (C, solver, penalty)
-  - Cross-validation (5-fold) on training data
-  - Compare performance: baseline vs tuned
-  - Save best parameters
-  
-- **Task 1.3:** Model Validation & Metrics (1.5 hrs)
-  - Generate ROC curve and AUC score
-  - Precision-Recall curve
-  - Calibration analysis (expected calibration error)
-  - Document all metrics in report
-  
-- **Task 1.4:** Code Cleanup (1 hr)
-  - Refactor notebook for clarity
-  - Add markdown documentation
-  - Create utility functions for preprocessing
-
-**Deliverables:**
-- `analyzedata_v2_optimized.ipynb` (updated with optimization)
-- `reports/model_optimization_report.md`
-- `utils/preprocessing.py` (feature scaling function)
-
-**Time Estimate:** 6-7 hours
+### Week 2: Deployment & Operations (Apr 22-28)
+- Build FastAPI service
+- Containerize with Docker
+- Implement CI/CD pipeline
+- Add monitoring & logging
+- Complete documentation
+- Release v1.0.0
 
 ---
 
-### Day 2: Tuesday, April 16 (5-6 hours)
-**Theme:** Model Artifacts & Storage
+## 3. Detailed Sprint Breakdown
 
-- **Task 2.1:** Save All Model Artifacts (1.5 hrs)
-  - Pickle trained model
-  - Pickle fitted scaler
-  - Save feature names (list/JSON)
-  - Save model coefficients & intercept
-  
-- **Task 2.2:** Create Metadata & Documentation (1.5 hrs)
-  - `model_metadata.json` (version, date, hyperparams, metrics)
-  - Feature schema & descriptions
-  - Training dataset statistics
-  - Performance metrics summary
-  
-- **Task 2.3:** Model Versioning System (1 hr)
-  - Create `models/v1/` directory structure
-  - Document versioning naming convention
-  - Create model registry (JSON with all versions)
-  
-- **Task 2.4:** Artifact Testing (1 hr)
-  - Load pickled model from disk
-  - Test predictions with loaded artifacts
-  - Verify scaler transformation
-  - Confirm no data leakage
+### WEEK 1: Model Foundation & Deployment Readiness
 
-**Deliverables:**
-- `models/v1/logistic_regression_model.pkl`
-- `models/v1/scaler.pkl`
-- `models/v1/feature_names.json`
-- `models/v1/model_metadata.json`
-- `models/model_registry.json`
-- `config/feature_schema.md`
+#### Phase 1A: Model Optimization  
+**Objective:** Validate & optimize logistic regression model
 
-**Time Estimate:** 5-6 hours
+Activities:
+- Advanced feature analysis (correlation, multicollinearity via VIF)
+- Hyperparameter tuning (grid search on C, solver parameters)
+- Generate ROC, precision-recall curves
+- Document all performance metrics
+- Create optimization report
+
+**Why this matters:** Ensures model is production-ready with best possible performance  
+**Deliverables:** Optimized model, performance report  
 
 ---
 
-### Day 3: Wednesday, April 17 (5-6 hours)
-**Theme:** Dataset Artifacts & Data Pipeline
+#### Phase 1B: Model + Data Artifacts 
+**Objective:** Prepare reproducible, versioned model for deployment
 
-- **Task 3.1:** Raw vs Processed Data Organization (1 hr)
-  - Create standardized `data/` directory structure
-  - Document raw data source & version
-  - Save processed dataset with metadata
-  
-- **Task 3.2:** Create Data Splits (1.5 hrs)
-  - Save train set with features & labels
-  - Save test set with features & labels
-  - Save validation set (if needed)
-  - Document split strategy & random seed
-  
-- **Task 3.3:** Data Validation & Quality Report (1.5 hrs)
-  - Missing value analysis
-  - Outlier detection & handling
-  - Data distribution statistics
-  - Class balance report
-  
-- **Task 3.4:** Data Dictionary Documentation (1 hr)
-  - Feature descriptions (type, range, units)
-  - Target variable definition
-  - Encoding scheme documentation
-  - Create `DATA_DICTIONARY.md`
+Activities:
+- Pickle trained model & fitted scaler
+- Save feature names, coefficients, hyperparameters
+- Create `model_metadata.json` (version, date, metrics, hyperparams)
+- Organize data splits (train/test files with metadata)
+- Create data quality report & data dictionary
 
-**Deliverables:**
-- `data/raw/nhanes_merged_raw.csv`
-- `data/processed/nhanes_cleaned.csv`
-- `data/splits/train_X.csv`, `train_y.csv`
-- `data/splits/test_X.csv`, `test_y.csv`
-- `data/data_quality_report.md`
-- `docs/DATA_DICTIONARY.md`
-
-**Time Estimate:** 5-6 hours
+**Why this matters:** Ensures consistent predictions across environments; enables version rollback  
+**Deliverables:** `models/v1/` directory, metadata, data splits  
 
 ---
 
-### Day 4: Thursday, April 18 (4-5 hours)
-**Theme:** Feature Engineering & Advanced Features (Optional)
+#### Phase 1C: Feature Engineering & Documentation 
+**Objective:** Document all feature decisions and alternatives considered
 
-- **Task 4.1:** Feature Interaction Analysis (1 hr)
-  - Explore potential feature interactions
-  - Test: age × activity level
-  - Test: income × education (if available)
-  - Quantify improvement (if any)
-  
-- **Task 4.2:** Feature Scaling Strategy Review (1 hr)
-  - Verify StandardScaler is appropriate
-  - Check min-max scaling alternative
-  - Test robustness to outliers
-  - Document choice vs alternatives
-  
-- **Task 4.3:** Advanced Encoding Options (1 hr)
-  - Evaluate one-hot vs ordinal encoding
-  - Test label encoding for categorical features
-  - Compare model performance
-  - **Decision:** Stick with current if acceptable
-  
-- **Task 4.4:** Feature Importance Visualization (1 hr)
-  - Create bar chart of top features
-  - Explain feature impact on prediction
-  - Generate SHAP-like interpretation (manual)
-  
-- **Task 4.5:** Feature Engineering Report (0.5 hrs)
-  - Document all feature engineering choices
-  - Justify encoding & scaling decisions
-  - Create `FEATURE_ENGINEERING.md`
+Activities:
+- Finalize encoding strategy (binary, one-hot, ordinal?)
+- Document imputation choices & rationale
+- Feature importance analysis & visualization
+- Create `FEATURE_ENGINEERING.md` reference
 
-**Deliverables:**
-- `notebooks/feature_engineering_analysis.ipynb`
-- `reports/feature_importance_analysis.md`
-- `docs/FEATURE_ENGINEERING.md`
-- Feature importance visualization (PNG/HTML)
-
-**Time Estimate:** 4-5 hours
+**Why this matters:** Team onboarding, reproducibility, audit trail  
+**Deliverables:** Feature engineering document, importance charts  
 
 ---
 
-### Day 5: Friday, April 19 (5-6 hours)
-**Theme:** Git Setup & Version Control
+#### Phase 1D: Git Setup & Versioning 
+**Objective:** Establish version control and branching strategy
 
-- **Task 5.1:** GitHub Repository Setup (1 hr)
-  - Initialize git repo (if not done)
-  - Create branch structure: `main`, `dev`, `production`
-  - Set branch protection rules (main/prod)
-  - Create `.gitignore` (exclude data/, models/v0/, __pycache__)
-  
-- **Task 5.2:** Commit Project Foundation (1 hr)
-  - Commit all notebooks to `dev` branch
-  - Commit model artifacts
-  - Commit config files & documentation
-  - Write descriptive commit messages
-  
-- **Task 5.3:** Create Feature Branches (1 hr)
-  - Branch `dev` → `feature/api-deployment`
-  - Branch `dev` → `feature/monitoring`
-  - Branch `dev` → `feature/streamlit-ui` (optional)
-  - Document branch naming convention
-  
-- **Task 5.4:** Git Workflow Documentation (0.5 hrs)
-  - Create `GIT_WORKFLOW.md` with branching strategy
-  - Document commit message format
-  - Create PR template
-  - Define merge strategy (squash vs rebase)
-  
-- **Task 5.5:** Create Release Tags (0.5 hrs)
-  - Tag current commit as `v1.0-model-baseline`
-  - Document version in `VERSION.md`
-  - Create CHANGELOG (first entry)
+Activities:
+- Initialize repo with `main`, `dev`, `production` branches
+- Create `.gitignore` (exclude data/, large models/, __pycache__)
+- First commits on `dev`: notebooks, configs, docs
+- Create `GIT_WORKFLOW.md`, `VERSION.md`, `CHANGELOG.md`
+- Tag first release: `v0.1-model-baseline`
 
-**Deliverables:**
-- GitHub repo with `main`, `dev`, `production` branches
-- `.gitignore` configured
-- Initial commits on `dev`
-- `docs/GIT_WORKFLOW.md`
-- `VERSION.md` & `CHANGELOG.md`
-- Git tags: `v1.0-model-baseline`
-
-**Time Estimate:** 5-6 hours
+**Why this matters:** Team coordination, CI/CD foundation, rollback capability  
+**Deliverables:** GitHub repo, branching strategy docs  
 
 ---
 
-### Day 6-7: Weekend Buffer (Saturday-Sunday, Apr 20-21)
-**Use for:**
-- Catching up on any delayed tasks from Week 1
-- Testing and validation
-- Documentation review
+### WEEK 2: API, Deployment, Monitoring
 
-**Estimated Buffer:** 4-6 hours total
+#### Phase 2A: API Development 
+**Objective:** Build production-ready prediction service
 
-**Week 1 Total:** ~35-40 hours
+Activities:
+- FastAPI app with 3 endpoints: `/health`, `/predict` (single), `/batch_predict`
+- Pydantic models for input validation & type safety
+- Load model & scaler at startup
+- Logging for all requests & errors
+- Basic error handling
 
----
-
-## WEEK 2: April 22-28 (Deployment, Monitoring, & CI/CD)
-
-### Day 8: Monday, April 22 (6-7 hours)
-**Theme:** API Development (FastAPI)
-
-- **Task 8.1:** FastAPI Setup & Project Structure (1.5 hrs)
-  - Install FastAPI & Uvicorn
-  - Create `api/` directory structure
-  - Set up project layout:
-    ```
-    api/
-    ├── main.py
-    ├── models.py (Pydantic schemas)
-    ├── config.py (paths, constants)
-    └── requirements.txt
-    ```
-  - Create virtual environment for API
-  
-- **Task 8.2:** Pydantic Models & Input Validation (1.5 hrs)
-  - Create `PatientData` model with 8 fields
-  - Add field validation (ranges, types)
-  - Create `PredictionResponse` model
-  - Add example inputs for documentation
-  
-- **Task 8.3:** Core API Endpoints (2 hrs)
-  - `/health` endpoint → returns model status
-  - `/predict` endpoint → single prediction
-  - `/batch_predict` endpoint → CSV upload
-  - Load model & scaler from disk at startup
-  
-- **Task 8.4:** Error Handling & Logging (1 hr)
-  - Add try-catch for predictions
-  - Log requests & predictions
-  - Return meaningful error messages
-  - Handle edge cases (missing features, invalid data)
-  
-- **Task 8.5:** API Testing (0.5 hrs)
-  - Test `/health` endpoint
-  - Test `/predict` with sample data
-  - Verify response format & types
-  - Check for errors
-
-**Deliverables:**
-- `api/main.py` (complete FastAPI app)
-- `api/models.py` (Pydantic schemas)
-- `api/config.py` (configuration)
-- `api/requirements.txt`
-- `tests/test_api_basic.py` (simple tests)
-- Swagger docs at `/docs` endpoint
-
-**Time Estimate:** 6-7 hours
+**Why this matters:** Enables integration with healthcare systems  
+**Deliverables:** Working FastAPI service, Swagger docs  
 
 ---
 
-### Day 9: Tuesday, April 23 (5-6 hours)
-**Theme:** Deployment - Docker & Local Testing
+#### Phase 2B: Docker & Local Deployment 
+**Objective:** Containerize API for consistent environments
 
-- **Task 9.1:** Dockerfile Creation (1.5 hrs)
-  - Base image: `python:3.10-slim`
-  - Copy code & requirements
-  - Install dependencies
-  - Set working directory
-  - Expose port 8000
-  - CMD: run Uvicorn server
-  
-- **Task 9.2:** Docker Compose Setup (1 hr)
-  - Create `docker-compose.yml`
-  - Define API service (FastAPI)
-  - Mount volumes for model/data
-  - Configure port mapping
-  - Set environment variables
-  
-- **Task 9.3:** Build & Test Locally (1.5 hrs)
-  - Build Docker image
-  - Run container locally
-  - Test API endpoints
-  - Verify model loading
-  - Check response times
-  
-- **Task 9.4:** Docker Documentation (1 hr)
-  - Create `DEPLOYMENT_GUIDE.md`
-  - Document local setup steps
-  - Provide example curl commands
-  - Troubleshooting guide
+Activities:
+- Create Dockerfile (Python 3.10 slim base)
+- Create docker-compose.yml for local orchestration
+- Test locally—verify API endpoints work in container
+- Document deployment steps
 
-**Deliverables:**
-- `Dockerfile`
-- `docker-compose.yml`
-- `.dockerignore`
-- `docs/DEPLOYMENT_GUIDE.md`
-- Tested Docker image running locally
-
-**Time Estimate:** 5-6 hours
+**Why this matters:** Deploy same code to dev/prod with zero environment surprises  
+**Deliverables:** Dockerfile, docker-compose.yml, deployment guide  
 
 ---
 
-### Day 10: Wednesday, April 24 (6-7 hours)
-**Theme:** CI/CD Pipeline (GitHub Actions)
+#### Phase 2C: CI/CD Pipeline 
+**Objective:** Automate testing and deployment
 
-- **Task 10.1:** GitHub Actions Workflow Setup (2 hrs)
-  - Create `.github/workflows/ci.yml`
-  - Define trigger events (push, PR)
-  - Python 3.10 environment setup
-  - Install dependencies from `requirements.txt`
-  
-- **Task 10.2:** Tests & Code Quality Checks (2 hrs)
-  - Linting with `pylint` (or `flake8`)
-  - Code formatting check with `black`
-  - Run unit tests with `pytest`
-  - Generate coverage report
-  
-- **Task 10.3:** Build & Push Docker Image (1.5 hrs)
-  - Add Docker build step to workflow
-  - (Optional) Push to Docker Hub
-  - Add build on merge to `main` only
-  
-- **Task 10.4:** Deployment Step (1 hr)
-  - Add step to deploy to cloud (if using)
-  - Or document manual deployment process
-  - Add status badges to README
-  
-- **Task 10.5:** Secrets Management (0.5 hrs)
-  - Document required GitHub secrets
-  - Add instructions for setup
-  - Create `.env.example` template
+Activities:
+- GitHub Actions workflow: trigger on push/PR
+- Linting (pylint/flake8) & formatting (black)
+- Unit tests (pytest, ≥75% coverage)
+- Docker image build on merge to `main`
+- (Optional) Deploy to cloud (AWS/GCP)
 
-**Deliverables:**
-- `.github/workflows/ci.yml` (complete pipeline)
-- `requirements.txt` (all dependencies)
-- `tests/` directory with test files
-- `pytest.ini` configuration
-- `docs/CI_CD_GUIDE.md`
-- Status badges in README
+**Why this matters:** Catch bugs early, reduce manual errors, faster releases  
+**Deliverables:** `.github/workflows/ci.yml`, test suite  
 
-**Time Estimate:** 6-7 hours
 
 ---
 
-### Day 11: Thursday, April 25 (5-6 hours)
-**Theme:** Monitoring & Logging Strategy
+#### Phase 2D: Monitoring & Logging  
+**Objective:** Detect model drift and operational issues
 
-- **Task 11.1:** Application Logging Setup (1.5 hrs)
-  - Add logging to API (predict requests, errors)
-  - Log to file: `logs/api.log`
-  - Rotation policy (daily, 10 MB)
-  - Log levels: DEBUG, INFO, WARNING, ERROR
-  
-- **Task 11.2:** Prediction Logging (1 hr)
-  - Log each prediction request & response
-  - Log confidence scores
-  - Track prediction latency
-  - Log any errors/misclassifications
-  
-- **Task 11.3:** Data Drift Detection (1.5 hrs)
-  - Simple drift check: compare feature distributions
-  - Check for NaN increases
-  - Log alerts if drift detected
-  - Create `monitoring/drift_detector.py`
-  
-- **Task 11.4:** Monitoring Documentation (1 hr)
-  - Create `MONITORING_GUIDE.md`
-  - Document what to monitor
-  - When to retrain (retraining triggers)
-  - How to analyze logs
-  
-- **Task 11.5:** (Optional) Streamlit Dashboard (0.5 hrs)
-  - Create simple status dashboard
-  - Show model version, last retrain date
-  - Show prediction count, error rate
-  - Show data drift status
+Activities:
+- API logging (requests, predictions, errors) → `logs/api.log`
+- Track prediction latency, error rates
+- Data drift detection: compare feature distributions vs training data
+- Log alerts for drift thresholds
+- Create `MONITORING_GUIDE.md`—when/how to retrain
 
-**Deliverables:**
-- `api/logging_config.py` (logging setup)
-- `monitoring/drift_detector.py`
-- `monitoring/alert_system.py` (basic alerts)
-- `logs/` directory initialized
-- `docs/MONITORING_GUIDE.md`
-- (Optional) `monitoring/streamlit_dashboard.py`
+**Why this matters:** Catch model degradation early; know when to retrain  
+**Deliverables:** Monitoring system, drift detector, logging setup  
 
-**Time Estimate:** 5-6 hours
 
 ---
 
-### Day 12: Friday, April 26 (5-6 hours)
-**Theme:** Documentation & README
+#### Phase 2E: Documentation 
+**Objective:** Enable team onboarding and handoff
 
-- **Task 12.1:** Comprehensive README.md (1.5 hrs)
-  - Project overview & problem statement
-  - Quick start guide (local & Docker)
-  - Feature descriptions
-  - Model performance metrics
-  - Usage examples (API calls, predictions)
-  
-- **Task 12.2:** API Documentation (1 hr)
-  - Document all endpoints
-  - Provide request/response examples
-  - Add error codes & meanings
-  - Create API_DOCUMENTATION.md
-  
-- **Task 12.3:** Deployment Guide (1 hr)
-  - Local setup steps
-  - Docker deployment
-  - CI/CD pipeline overview
-  - Cloud deployment (AWS/GCP) placeholder
-  
-- **Task 12.4:** Model Card & Ethics (1 hr)
-  - Create MODEL_CARD.md
-  - Model description & intended use
-  - Limitations & biases
-  - Known issues & edge cases
-  
-- **Task 12.5:** Contributing Guide (0.5 hrs)
-  - CONTRIBUTING.md
-  - Code style guidelines
-  - Pull request process
-  - Development setup
+Activities:
+- README: problem, quick start (local + Docker), examples
+- API_DOCUMENTATION.md: all endpoints, request/response samples
+- DEPLOYMENT_GUIDE.md: step-by-step deployment
+- MODEL_CARD.md: model description, limitations, ethical considerations
+- CONTRIBUTING.md: code style, PR process
+- TROUBLESHOOTING.md: common issues & fixes
 
-**Deliverables:**
-- `README.md` (comprehensive)
-- `docs/API_DOCUMENTATION.md`
-- `docs/DEPLOYMENT_GUIDE.md`
-- `docs/MODEL_CARD.md`
-- `CONTRIBUTING.md`
-- `docs/TROUBLESHOOTING.md`
+**Why this matters:** Reduces onboarding time; documents assumptions  
+**Deliverables:** 6+ docs, comprehensive README  
 
-**Time Estimate:** 5-6 hours
 
 ---
 
-### Day 13: Saturday, April 27 (4-5 hours)
-**Theme:** Testing, Validation & Integration
+#### Phase 2F: Integration Testing 
+**Objective:** Verify end-to-end system works
 
-- **Task 13.1:** End-to-End Testing (1.5 hrs)
-  - Full pipeline test: data → model → API
-  - Test with real sample data
-  - Verify predictions match notebook
-  - Document test results
-  
-- **Task 13.2:** Load Testing (API Performance) (1 hr)
-  - Test API with multiple concurrent requests
-  - Measure latency (target: <200ms)
-  - Check memory usage
-  - Document performance benchmarks
-  
-- **Task 13.3:** Final Code Review (1 hr)
-  - Review all code for quality
-  - Check for bugs, edge cases
-  - Verify error handling
-  - Clean up comments & documentation
-  
-- **Task 13.4:** Pre-deployment Checklist (0.5 hrs)
-  - All tests passing
-  - Docker build successful
-  - Documentation complete
-  - No secrets in code
+Activities:
+- Data → model → API → response integration tests
+- Load testing: verify API responds in <200ms under load
+- Final code review for quality & security
+- Pre-deployment checklist
 
-**Deliverables:**
-- `tests/test_end_to_end.py`
-- `tests/test_load.py`
-- Performance benchmarks report
-- Final code review checklist
+**Why this matters:** Catch integration bugs before production  
+**Deliverables:** Test reports, performance benchmarks  
 
-**Time Estimate:** 4-5 hours
 
 ---
 
-### Day 14: Sunday, April 28 (4-5 hours)
-**Theme:** Final Merge, Release & Presentation
+#### Phase 2G: Release & Presentation (Apr 28) 
+**Objective:** Ship v1.0.0 and present to stakeholders
 
-- **Task 14.1:** Final Merge to Main (1 hr)
-  - Create final PR from `dev` → `main`
-  - All CI/CD checks pass
-  - Code review & approval
-  - Merge with squash commit
-  
-- **Task 14.2:** Create Release & Tag (0.5 hrs)
-  - Tag commit as `v1.0.0`
-  - Create GitHub Release
-  - Update VERSION.md
-  - Update CHANGELOG.md
-  
-- **Task 14.3:** Presentation Preparation (1.5 hrs)
-  - Create slide deck (problem → solution → results)
-  - Prepare live demo walkthrough
-  - Document key metrics & achievements
-  - Practice presentation (5-7 min)
-  
-- **Task 14.4:** Demo & Testing (1 hr)
-  - Run API locally
-  - Make sample API calls
-  - Show Swagger docs
-  - Verify everything works
-  
-- **Task 14.5:** Final Documentation Update (0.5 hrs)
-  - Update README with latest info
-  - Add deployment status
-  - Create DEPLOYMENT_STATUS.md
+Activities:
+- Merge `dev` → `main`, create GitHub Release
+- Tag as `v1.0.0`, update CHANGELOG.md
+- Prepare 5-min demo + slides
+- Live API demo (predictions on real data)
 
-**Deliverables:**
-- Merged main branch with `v1.0.0` tag
-- GitHub Release page created
-- Presentation slides/deck
-- PRESENTATION_NOTES.md
-- Final README & documentation
-- Working demo verified
+**Why this matters:** Formal handoff, stakeholder communication  
+**Deliverables:** v1.0.0 release, presentation  
 
-**Time Estimate:** 4-5 hours
-
-**Week 2 Total:** ~35-40 hours
 
 ---
 
-## TOTAL PROJECT TIMELINE
+## 4. What We're Doing First vs. Next (Priority Order)
 
-| Week | Focus | Hours | Status |
-|------|-------|-------|--------|
-| **Pre-Week** (Apr 14) | Model foundation | 8 | ✅ Complete |
-| **Week 1** (Apr 15-21) | Optimization, artifacts, versioning | 35-40 | ⏭️ Next |
-| **Week 2** (Apr 22-28) | API, deployment, CI/CD, docs | 35-40 | ⏭️ Next |
-| **TOTAL** | Full end-to-end application | **80-90 hours** | On track |
+### Must Complete (Critical Path) 
+1. **Model optimization & testing** 
+2. **API endpoints**  
+3. **Docker containerization** 
+4. **Basic CI/CD** 
+5. **Documentation** 
 
----
+### Should Complete (High Value) 
+6. Model artifacts versioning 
+7. Git setup & branching 
+8. Monitoring & logging 
+9. Integration testing 
 
-## Daily Time Breakdown (April 15-28)
-
-| Date | Day | Focus Area | Hours | Deliverables |
-|------|-----|-----------|-------|--------------|
-| Apr 15 | Mon | Model Optimization | 6-7 | Optimized model, reports |
-| Apr 16 | Tue | Model Artifacts | 5-6 | Pickled model, metadata |
-| Apr 17 | Wed | Dataset Artifacts | 5-6 | Data splits, quality report |
-| Apr 18 | Thu | Feature Engineering | 4-5 | Feature analysis, visualizations |
-| Apr 19 | Fri | Git Setup | 5-6 | Repository structure, docs |
-| Apr 20-21 | Sat-Sun | **Buffer** | 4-6 | Catch-up, testing |
-| **Week 1 Total** | | | **34-40** | |
-| Apr 22 | Mon | API Development | 6-7 | FastAPI endpoints, tests |
-| Apr 23 | Tue | Docker & Local Deploy | 5-6 | Dockerfile, docker-compose |
-| Apr 24 | Wed | CI/CD Pipeline | 6-7 | GitHub Actions workflow |
-| Apr 25 | Thu | Monitoring & Logging | 5-6 | Logging setup, drift detection |
-| Apr 26 | Fri | Documentation | 5-6 | README, API docs, guides |
-| Apr 27 | Sat | Testing & Integration | 4-5 | E2E tests, performance tests |
-| Apr 28 | Sun | Final Release | 4-5 | v1.0.0 release, presentation |
-| **Week 2 Total** | | | **35-42** | |
 
 ---
 
-## Priority Matrix: What to Do If Running Behind
+## 5. How This Plan Updates
 
-### Must-Have (Critical Path)
-1. ✅ Model training (DONE)
-2. Model artifacts & storage (Day 16)
-3. API deployment (Day 22)
-4. Basic testing
-5. Documentation
+**Triggers for change:**
+- Model performance below targets → revisit feature engineering
+- Data drift detected → trigger retraining discussion
+- Infrastructure constraints → adjust deployment approach
+- Stakeholder feedback → update metric targets or priorities
 
-### Should-Have (High Priority)
-6. Git/version control (Day 19)
-7. Docker containerization (Day 23)
-8. CI/CD pipeline (Day 24)
-9. Monitoring (Day 25)
+ 
+**Version tracking:** Use git to track plan changes (update CHANGELOG.md)
 
-### Nice-to-Have (Can Skip If Behind)
-10. Advanced monitoring dashboards
-11. Streamlit UI
-12. Load testing
-13. Advanced feature engineering
-
-**If short on time:** Prioritize API → Docker → Documentation (skip Streamlit/dashboards)
 
 ---
 
+## 6. Success Metrics & Targets
+
+### Model Performance (Apr 15 baseline)
+| Metric | Target | Why |
+|--------|--------|-----|
+| **Recall** | ≥60% | Minimize false negatives—catch patients we should |
+| **Precision** | ≥65% | Ensure flagged patients are actually at-risk; maintain provider trust |
+| **Accuracy** | ≥70% | Overall system correctness |
+| **F1-Score** | ≥0.62 | Balanced recall/precision harmony |
+
+### Deployment Targets (Apr 22+)
+| Component | Target | Success Criteria |
+|-----------|--------|-----------------|
+| **API Latency** | <200ms | Measured under typical load |
+| **Test Coverage** | ≥75% | Unit + integration tests |
+| **Uptime** | >99% | After day 1 deployment |
+| **Documentation** | 100% | README, API docs, deployment guide complete |
+
 ---
 
-## 4. Feature Engineering Summary (As Applied in Week 0)
+## 7. Risk Mitigation
 
-### Quick Reference - Imputation & Encoding Choices
+| Risk | Impact | Mitigation |
+|------|--------|-----------|
+| Model performance below targets | Blocks deployment | Revisit features/hyperparams by Apr 17 |
+| API bottleneck | Service degradation | Load test early (Apr 27) |
+| Missing dependencies | Build failures | Maintain updated requirements.txt |
+| Data drift | Model decay | Implement drift detector (Apr 25) |
+| Team bandwidth | Schedule slippage | Weekly retrospective to reprioritize |
 
-| Feature | Missing % | Strategy | Code |
-|---------|-----------|----------|------|
-| **SLD012** (Sleep) | ~15% | Median | `df["SLD012"].fillna(df["SLD012"].median())` |
-| **ALQ111** (Alcohol) | ~25% | Category code | `df["ALQ111"].fillna(3)` |
-| **INDFMMPI** (Income) | ~10% | Mean | `df["INDFMMPI"].fillna(df["INDFMMPI"].mean())` |
-| **ALQ130** | >30% | Dropped | `df.drop(columns=["ALQ130"])` |
+---
 
-### Categorical Encoding
-```python
-df["RIAGENDR"] = df["RIAGENDR"].map({1: 0, 2: 1})
-df["ALQ111"] = (df["ALQ111"] == 1).astype(int)
-df["BPQ020"] = (df["BPQ020"] == 1).astype(int)
+## 8. Artifacts & Deliverables Summary
+
+### Week 1 Deliverables
+- `models/v1/logistic_regression_model.pkl`, `scaler.pkl`, feature metadata
+- Data splits and quality report
+- `docs/FEATURE_ENGINEERING.md`, `GIT_WORKFLOW.md`
+- Git repo with `main`, `dev`, `production` branches
+
+### Week 2 Deliverables  
+- `api/main.py` - FastAPI service with 3 endpoints
+- `Dockerfile`, `docker-compose.yml`
+- `.github/workflows/ci.yml` - GitHub Actions CI/CD
+- `monitoring/drift_detector.py`, logging setup
+- Comprehensive docs: README, API_DOCUMENTATION, DEPLOYMENT_GUIDE, MODEL_CARD
+- Test suite with ≥75% coverage
+- `v1.0.0` GitHub Release
+
+---
+
+## 9. Repository Structure
 ```
-
-### Standardization
-```python
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-```
-
----
-
-## 5. Model Artifacts & Storage (To Implement Week 1 - Day 2)
-
----
-
-## 6. Success Criteria & Project Status
-
-### 11.1 Model Performance Targets
-
-| Metric | Target | Status |
-|--------|--------|--------|
-| **Accuracy** | ≥ 70% | ✅ Check test set |
-| **Precision** | ≥ 0.65 | ✅ Check test set |
-| **Recall** | ≥ 0.60 | ✅ Check test set |
-| **F1-Score** | ≥ 0.62 | ✅ Check test set |
-
-### 11.2 Application Deployment Targets
-
-| Component | Target | Status |
-|-----------|--------|--------|
-| **API Latency** | < 200 ms | ⏭️ To measure (Apr 22) |
-| **Uptime** | > 99% | ⏭️ After deployment (Apr 23+) |
-| **Test Coverage** | ≥ 75% | ⏭️ To implement (Apr 24) |
-| **Documentation** | Complete | ⏭️ To finalize (Apr 26) |
-| **CI/CD** | Automated | ⏭️ To setup (Apr 24) |
-
-### 11.3 Project Completion Checklist
-
-#### ✅ Week 0 (April 14) - COMPLETED
-- [x] Data loaded from NHANES (7 modules)
-- [x] Data merged on SEQN & cleaned
-- [x] Missing values handled (imputation + dropping)
-- [x] Features encoded (binary, scaled)
-- [x] Train-test split performed
-- [x] Logistic Regression trained
-- [x] Predictions generated & evaluated
-- [x] Feature importance computed
-
-#### ⏭️ Week 1 (April 15-21) - IN PROGRESS
-- [ ] Advanced model optimization (Apr 15)
-- [ ] Model artifacts saved (.pkl files) (Apr 16)
-- [ ] Dataset artifacts organized (Apr 17)
-- [ ] Feature engineering review (Apr 18)
-- [ ] Git repository setup (Apr 19)
-- [ ] Optimization report + documentation (Apr 19)
-
-#### ⏭️ Week 2 (April 22-28) - NEXT PHASE
-- [ ] API development with FastAPI (Apr 22)
-- [ ] Docker containerization (Apr 23)
-- [ ] CI/CD pipeline setup (Apr 24)
-- [ ] Monitoring & logging implementation (Apr 25)
-- [ ] Comprehensive documentation (Apr 26)
-- [ ] End-to-end testing (Apr 27)
-- [ ] v1.0.0 release & presentation (Apr 28)
-
----
-
-## 7. Project Tools & References
-
-### Python Environment Setup
-```bash
-pip install pandas numpy scikit-learn fastapi uvicorn pydantic pytest black pylint
-```
-
-### Key Libraries
-- **Data & ML:** pandas, numpy, scikit-learn
-- **API:** FastAPI, uvicorn, pydantic
-- **Deployment:** Docker, docker-compose
-- **Testing & QA:** pytest, black, pylint
-- **(Optional) UI:** streamlit, shap
-
-### Data Source
-- **NHANES 2015-2020:** https://wwwn.cdc.gov/nchs/nhanes/
-- **Format:** .xpt (SAS Transport) files
-- **Modules Used:** DEMO, BMX, ALQ, PAQ, SLQ, BPQ, INQ
-
----
-
-## 8. Quick Reference: Directory Structure
-
-```
-NHANES/
-├── analyzedata.ipynb                  # Main notebook (COMPLETED)
-├── PROJECT_PLAN.md                    # This file
-├── README.md                          # (Generate by Apr 26)
+NHANES_Capstone/
+├── analyzedata.ipynb                      # Main model notebook (Week 0)
+├── PROJECT_PLAN.md                        # This file—update weekly
+├── README.md                              # (Completed Apr 26)
 │
-├── models/
+├── models/                                # Model versioning
+│   ├── v0/                                # (Archive)
 │   └── v1/
 │       ├── logistic_regression_model.pkl
 │       ├── scaler.pkl
@@ -811,36 +327,37 @@ NHANES/
 │       └── model_metadata.json
 │
 ├── data/
-│   ├── raw/                          # Original NHANES files
-│   └── processed/                    # Cleaned data
+│   ├── raw/                               # Original NHANES
+│   ├── processed/                         # Cleaned data
+│   └── splits/                            # Train/test files
 │
-├── api/                              # (Build week 2)
+├── api/                                   # FastAPI service (Week 2)
 │   ├── main.py
 │   ├── models.py
 │   ├── config.py
 │   └── requirements.txt
 │
-├── tests/                            # (Build week 2)
+├── tests/                                 # Automated tests
 │   ├── test_api_basic.py
 │   ├── test_end_to_end.py
 │   └── test_load.py
 │
-├── monitoring/                       # (Build week 2)
+├── monitoring/                            # Logging & monitoring (Week 2)
 │   ├── drift_detector.py
 │   └── alert_system.py
 │
-├── docs/                             # (Build week 2)
+├── docs/                                  # Documentation
 │   ├── FEATURE_ENGINEERING.md
 │   ├── API_DOCUMENTATION.md
 │   ├── DEPLOYMENT_GUIDE.md
 │   ├── MODEL_CARD.md
 │   ├── MONITORING_GUIDE.md
+│   ├── GIT_WORKFLOW.md
 │   └── TROUBLESHOOTING.md
 │
-├── Dockerfile                        # (Build Apr 23)
-├── docker-compose.yml                # (Build Apr 23)
-├── .github/workflows/
-│   └── ci.yml                        # (Build Apr 24)
+├── Dockerfile                             # Container (Apr 23)
+├── docker-compose.yml                     # Compose config (Apr 23)
+├── .github/workflows/ci.yml               # CI/CD (Apr 24)
 │
 ├── .gitignore
 ├── VERSION.md
@@ -849,4 +366,24 @@ NHANES/
 
 ---
 
-## 9. At a Glance: Timeline Summary
+## 14. Quick Links & References
+
+- **NHANES Data Portal:** https://wwwn.cdc.gov/nchs/nhanes/
+- **FastAPI Docs:** https://fastapi.tiangolo.com/
+- **GitHub Actions:** https://docs.github.com/en/actions
+- **Docker Docs:** https://docs.docker.com/
+
+---
+
+## Questions? Check These Docs First
+
+| Question | Doc |
+|----------|-----|
+| How do we encode features? | `FEATURE_ENGINEERING.md` |
+| How do I deploy the API? | `DEPLOYMENT_GUIDE.md` |
+| What are the model limits? | `MODEL_CARD.md` |
+| When should we retrain? | `MONITORING_GUIDE.md` |
+| How do we use git? | `GIT_WORKFLOW.md` |
+| API not working? | `TROUBLESHOOTING.md` |
+
+
