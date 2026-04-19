@@ -89,17 +89,12 @@ Activities:
 
 ---
 
-#### Phase 1C: Feature Engineering & Documentation 
-**Objective:** Document all feature decisions and alternatives considered
+#### Phase 1C: Feature Engineering 
+**Objective:** The objective of feature engineering is to transform raw data into meaningful and informative features that improve the model’s ability to learn patterns, enhance predictive performance, and incorporate domain knowledge.
 
 Activities:
 - Finalize encoding strategy (binary, one-hot, ordinal?)
-- Document imputation choices & rationale
 - Feature importance analysis & visualization
-- Create `FEATURE_ENGINEERING.md` reference
-
-**Why this matters:** Team onboarding, reproducibility, audit trail  
-**Deliverables:** Feature engineering document, importance charts  
 
 ---
 
