@@ -64,7 +64,7 @@ This plan evolves as we learn. **Update weekly** when we discover changes.
 
 Activities:
 - Advanced feature analysis (correlation, multicollinearity via VIF)
-- Hyperparameter tuning (grid search on C, solver parameters)
+- Hyperparameter tuning 
 - Generate ROC, precision-recall curves
 - Document all performance metrics
 - Create optimization report
@@ -105,7 +105,6 @@ Activities:
 - Initialize repo with `main`, `dev`, `production` branches
 - Create `.gitignore` (exclude data/, large models/, __pycache__)
 - First commits on `dev`: notebooks, configs, docs
-- Create `GIT_WORKFLOW.md`, `VERSION.md`, `CHANGELOG.md`
 - Tag first release: `v0.1-model-baseline`
 
 **Why this matters:** Team coordination, CI/CD foundation, rollback capability  
@@ -121,7 +120,6 @@ Activities:
 Activities:
 - FastAPI app with 3 endpoints: `/health`, `/predict` (single), `/batch_predict`
 - Pydantic models for input validation & type safety
-- Load model & scaler at startup
 - Logging for all requests & errors
 - Basic error handling
 
