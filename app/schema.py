@@ -4,7 +4,6 @@ class PredictionInput(BaseModel):
     RIDAGEYR: float
     RIAGENDR: int
     BMXBMI: float
-    ALQ111: float
     PAQ605: float
     PAQ620: float
     SLD012: float

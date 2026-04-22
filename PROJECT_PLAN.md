@@ -12,27 +12,6 @@
 ### What Are We Solving?
 Build an ML system to **predict obesity risk** in individuals based on lifestyle factors (physical activity, sleep, socioeconomic status) from NHANES data. Enable healthcare providers to identify at-risk patients early for personalized interventions.
 
-### Why These Metrics? (Business Impact)
-
-#### High Recall (≥60%) - Why We Prioritize This
-- **What it means:** Catch 6 out of 10 people actually at obesity risk
-- **Business impact:** Minimize false negatives—missing at-risk patients is costly (missed interventions, disease progression)
-- **Cost tradeoff:** Slightly higher false positives (some non-at-risk flagged), but acceptable for preventive health
-- **When recall is low:** Healthcare system misses intervention opportunities; preventable diseases develop
-
-#### Balanced Accuracy (≥70%) & Precision (≥65%)
-- **Accuracy:** Overall system correctness across both groups
-- **Precision:** If model flags someone as at-risk, they're actually at-risk 65% of the time (trustworthy)
-- **Why balance?** Can't sacrifice precision too much or providers lose trust in recommendations
-
-#### F1-Score (≥0.62) - Harmony Between Recall & Precision
-- Balances both metrics—ensures we catch patients WITHOUT crying wolf too much
-
-### Dataset: NHANES 2015-2018
-- **Sample:** ~20,000 individuals across 2 cycles
-- **Features:** Age, gender, physical activity, sleep, alcohol use, hypertension status, income-to-poverty ratio
-- **Target:** Binary obesity classification (BMI ≥ 30)
-
 ---
 
 ## 2. Two-Week Sprint Overview
@@ -41,12 +20,13 @@ This plan evolves as we learn. **Update weekly** when we discover changes.
 
 ### Week 1: Model Optimization & Artifacts (Apr 15-21)
 - Optimize and validate model performance
-- Create versioned model artifacts & storage
-- Organize datasets with metadata
-- Set up git repository structure
+- Engineered domain-driven features (diet ratios, activity interactions)
+- Created versioned model artifacts (model, imputer, train_columns, threshold)
+- Ensured preprocessing consistency between training and inference
+- Structured repository with clean version control
 
 ### Week 2: Deployment & Operations (Apr 22-28)
-- Build FastAPI service
+- Build FastAPI service(/health, /predict, /batch_predict)
 - Containerize with Docker
 - Implement CI/CD pipeline
 - Add monitoring & logging
@@ -59,69 +39,96 @@ This plan evolves as we learn. **Update weekly** when we discover changes.
 
 ### WEEK 1: Model Foundation & Deployment Readiness
 
-#### Phase 1A: Model Optimization  
+#### Phase 1A: Model Optimization (completed) 
 **Objective:** Validate & optimize logistic regression model
 
 Activities:
-- Advanced feature analysis (correlation, multicollinearity via VIF)
-- Hyperparameter tuning 
-- Generate ROC, precision-recall curves
-- Document all performance metrics
-- Create optimization report
+- Performed feature analysis and domain-driven feature engineering
+- Created engineered features:
+    dietary ratios (protein, sugar, fat vs calories)
+    sodium density
+    calorie-activity interaction
+    log transformations for skewed features
+- Evaluated model using ROC, precision-recall tradeoffs
+- Tuned classification threshold to 0.35 to improve recall
 
-**Why this matters:** Ensures model is production-ready with best possible performance  
-**Deliverables:** Optimized model, performance report  
+**Outcome:** 
+- Achieved recall-focused model suitable for healthcare use case
+- Established tradeoff between recall and precision 
 
 ---
 
-#### Phase 1B: Model + Data Artifacts 
+#### Phase 1B: Model + Data Artifacts (completed)
 **Objective:** Prepare reproducible, versioned model for deployment
 
 Activities:
-- Pickle trained model & fitted scaler
-- Save feature names, coefficients, hyperparameters
-- Create `model_metadata.json` (version, date, metrics, hyperparams)
-- Organize data splits (train/test files with metadata)
-- Create data quality report & data dictionary
+- Saved artifacts using joblib:
+    model.joblib
+    train_columns.joblib
+    imputer.joblib
+    threshold.joblib
+- Ensured all preprocessing steps (missing values, feature engineering) are reproducible
+- Removed duplicate logic and consolidated imputation into a single artifact
 
-**Why this matters:** Ensures consistent predictions across environments; enables version rollback  
-**Deliverables:** `models/v1/` directory, metadata, data splits  
+**Why this matters:** Guarantees consistent predictions across environments and prevents training–inference mismatch
+**Deliverables:** Versioned artifacts in artifacts/model/  
 
 ---
 
-#### Phase 1C: Feature Engineering 
-**Objective:** The objective of feature engineering is to transform raw data into meaningful and informative features that improve the model’s ability to learn patterns, enhance predictive performance, and incorporate domain knowledge.
+#### Phase 1C: Feature Engineering (Completed)
+**Objective:** Transform raw NHANES data into meaningful predictive features
 
 Activities:
-- Finalize encoding strategy (binary, one-hot, ordinal?)
-- Feature importance analysis & visualization
+- Designed domain-informed features:
+    protein_ratio, sugar_ratio, fat_calorie_ratio
+    sodium_density
+    diet_quality score
+    calorie_activity interaction
+- Added missing value indicators for key dietary variables
+- Applied log transformations for skewed distributions
+
+**Outcome:** Improved model’s ability to capture lifestyle patterns affecting obesity risk
 
 ---
 
-#### Phase 1D: Git Setup & Versioning 
+#### Phase 1D: Git Setup & Versioning (Completed)
 **Objective:** Establish version control and branching strategy
 
 Activities:
-- Initialize repo with `main`, `dev`, `production` branches
-- Create `.gitignore` (exclude data/, large models/, __pycache__)
-- First commits on `dev`: notebooks, configs, docs
-- Tag first release: `v0.1-model-baseline`
-
-**Why this matters:** Team coordination, CI/CD foundation, rollback capability  
-**Deliverables:** GitHub repo, branching strategy docs  
+- Implemented branching strategy (dev, main)
+- Cleaned repository:
+    removed unnecessary files (__pycache__)
+    added proper .gitignore
+- Managed artifacts and dependencies (uv.lock, environment reproducibility)
+ 
+**Deliverables:** Clean, structured GitHub repository
 
 ---
 
 ### WEEK 2: API, Deployment, Monitoring
 
-#### Phase 2A: API Development 
+#### Phase 2A: API Development (Completed)
 **Objective:** Build production-ready prediction service
 
 Activities:
-- FastAPI app with 3 endpoints: `/health`, `/predict` (single), `/batch_predict`
-- Pydantic models for input validation, output validation & type safety
-- Logging for all requests & errors
-- Basic error handling
+- Built FastAPI application with endpoints:
+    - /health
+    - /predict (single inference)
+    - /batch_predict (batch inference)
+- Implemented Pydantic models for strict input validation
+- Integrated preprocessing pipeline into API:
+    - missing value handling via imputer
+    - feature engineering
+    - column alignment using train_columns
+- Loaded all artifacts at startup:
+    - model, imputer, threshold
+- Implemented structured logging:
+    - request logging
+    - prediction logging
+    - error logging
+- Added global exception handling
+- Implemented threshold-based classification (0.35)
+- Added latency tracking per request
 
 ---
 

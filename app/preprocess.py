@@ -1,15 +1,10 @@
 import pandas as pd
 import numpy as np
-from .model_loader import train_columns, imputer, training_defaults
+from .model_loader import train_columns, imputer
 
 
 def preprocess_input(data: dict):
     df = pd.DataFrame([data])
-
-    # Ensure all expected columns exist
-    for col in training_defaults["expected_raw_columns"]:
-        if col not in df:
-            df[col] = np.nan
 
     # Replace weird values
     df = df.replace(imputer["replace_value"], np.nan)
@@ -17,21 +12,18 @@ def preprocess_input(data: dict):
     # Missing value handling
     for col in ['DR1TKCAL','DR1TSUGR','DR1TTFAT','DR1TPROT','DR1TSODI']:
         df[col + '_missing'] = df[col].isna().astype(int)
-        df[col] = df[col].fillna(training_defaults[col])   
+        df[col] = df[col].fillna(imputer[col])   
 
     df['DBD900_missing'] = df['DBD900'].isna().astype(int)
-    df['DBD900'] = df['DBD900'].fillna(training_defaults["DBD900"])
-
-    df["ALQ111"] = df["ALQ111"].fillna(training_defaults["ALQ111_fill"])
-    df["SLD012"] = df["SLD012"].fillna(training_defaults["SLD012"])
-    df["INDFMMPI"] = df["INDFMMPI"].fillna(training_defaults["INDFMMPI"])
+    df['DBD900'] = df['DBD900'].fillna(imputer["DBD900"])
+    df["SLD012"] = df["SLD012"].fillna(imputer["SLD012"])
+    df["INDFMMPI"] = df["INDFMMPI"].fillna(imputer["INDFMMPI"])
 
     # Transformations
     df["RIAGENDR"] = df["RIAGENDR"].map({1: 0, 2: 1})
-    df["ALQ111"] = (df["ALQ111"] == 1).astype(int)
 
     # Feature engineering
-    eps = training_defaults.get("epsilon", 1e-6)
+    eps = imputer.get("epsilon", 1e-6)
 
     calories = df['DR1TKCAL'] + eps
 

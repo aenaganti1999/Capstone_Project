@@ -6,7 +6,7 @@ from typing import List
 import logging
 from .schema import PredictionInput, PredictionResponse
 from .preprocess import preprocess_input
-from .model_loader import model
+from .model_loader import model, threshold
 
 app = FastAPI(title="Healthcare Prediction API")
 
@@ -57,8 +57,6 @@ def predict(input_data: PredictionInput):
         
         # Probability + threshold
         probability = model.predict_proba(processed)[0][1]
-
-        threshold = 0.35
         prediction = int(probability > threshold)
 
         # End timing
@@ -92,7 +90,6 @@ def batch_predict(inputs: List[PredictionInput]):
             processed = preprocess_input(input_dict)
 
             probability = model.predict_proba(processed)[0][1]
-            threshold = 0.35
             prediction = int(probability > threshold)
 
             results.append({
