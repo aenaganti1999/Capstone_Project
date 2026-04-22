@@ -119,12 +119,9 @@ Activities:
 
 Activities:
 - FastAPI app with 3 endpoints: `/health`, `/predict` (single), `/batch_predict`
-- Pydantic models for input validation & type safety
+- Pydantic models for input validation, output validation & type safety
 - Logging for all requests & errors
 - Basic error handling
-
-**Why this matters:** Enables integration with healthcare systems  
-**Deliverables:** Working FastAPI service, Swagger docs  
 
 ---
 
@@ -155,7 +152,6 @@ Activities:
 **Why this matters:** Catch bugs early, reduce manual errors, faster releases  
 **Deliverables:** `.github/workflows/ci.yml`, test suite  
 
-
 ---
 
 #### Phase 2D: Monitoring & Logging  
@@ -170,7 +166,6 @@ Activities:
 
 **Why this matters:** Catch model degradation early; know when to retrain  
 **Deliverables:** Monitoring system, drift detector, logging setup  
-
 
 ---
 
@@ -188,7 +183,6 @@ Activities:
 **Why this matters:** Reduces onboarding time; documents assumptions  
 **Deliverables:** 6+ docs, comprehensive README  
 
-
 ---
 
 #### Phase 2F: Integration Testing 
@@ -203,7 +197,6 @@ Activities:
 **Why this matters:** Catch integration bugs before production  
 **Deliverables:** Test reports, performance benchmarks  
 
-
 ---
 
 #### Phase 2G: Release & Presentation (Apr 28) 
@@ -217,7 +210,6 @@ Activities:
 
 **Why this matters:** Formal handoff, stakeholder communication  
 **Deliverables:** v1.0.0 release, presentation  
-
 
 ---
 
@@ -236,7 +228,6 @@ Activities:
 8. Monitoring & logging 
 9. Integration testing 
 
-
 ---
 
 ## 5. How This Plan Updates
@@ -247,9 +238,7 @@ Activities:
 - Infrastructure constraints → adjust deployment approach
 - Stakeholder feedback → update metric targets or priorities
 
- 
 **Version tracking:** Use git to track plan changes (update CHANGELOG.md)
-
 
 ---
 
