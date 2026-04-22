@@ -1,11 +1,10 @@
 import time
-
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from typing import List
 import logging
-from .schema import PredictionInput
+from .schema import PredictionInput, PredictionResponse
 from .preprocess import preprocess_input
 from .model_loader import model
 
@@ -27,12 +26,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"message": "Something went wrong. Please try again."}
     )
 
-
 # Health check
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
 
 # Single prediction
 @app.post("/predict")
@@ -51,15 +48,12 @@ def predict(input_data: PredictionInput):
         # Convert input once (Pydantic v2)
         input_dict = input_data.model_dump()
         logger.info(f"Incoming request: {input_dict}")
-
        
         # Start timing
         start = time.time()
 
-        
         # Preprocess
         processed = preprocess_input(input_dict)
-
         
         # Probability + threshold
         probability = model.predict_proba(processed)[0][1]
@@ -67,7 +61,6 @@ def predict(input_data: PredictionInput):
         threshold = 0.35
         prediction = int(probability > threshold)
 
-        
         # End timing
         latency = time.time() - start
 
@@ -75,12 +68,12 @@ def predict(input_data: PredictionInput):
             f"prob={probability:.4f}, threshold={threshold}, pred={prediction}, latency={latency:.4f}s"
         )
 
-        return {
-            "prediction": prediction,
-            "probability": float(probability),
-            "threshold": threshold,
-            "latency_seconds": round(latency, 4)
-        }
+        return PredictionResponse(
+        prediction=int(prediction),
+        probability=float(probability),
+        threshold=float(threshold),
+        latency_seconds=round(latency, 4)
+    )
 
     except Exception as e:
         logger.error(f"Error during prediction: {str(e)}")
@@ -104,7 +97,8 @@ def batch_predict(inputs: List[PredictionInput]):
 
             results.append({
                 "prediction": prediction,
-                "probability": float(probability)
+                "probability": float(probability),
+                "threshold": float(threshold)
             })
 
         latency = time.time() - start

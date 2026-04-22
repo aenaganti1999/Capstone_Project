@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class PredictionInput(BaseModel):
     RIDAGEYR: float
@@ -17,3 +17,9 @@ class PredictionInput(BaseModel):
     DR1TSODI: float
     DBD895: float
     DBD900: float
+
+class PredictionResponse(BaseModel):
+    prediction: int
+    probability: float
+    threshold: float
+    latency_seconds: float
