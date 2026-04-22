@@ -95,7 +95,9 @@ Activities:
 **Objective:** Establish version control and branching strategy
 
 Activities:
-- Implemented branching strategy (dev, main)
+- Implemented simplified branching strategy:
+    - main → stable, production-ready code
+    - dev → active development and feature work
 - Cleaned repository:
     removed unnecessary files (__pycache__)
     added proper .gitignore
