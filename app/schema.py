@@ -1,12 +1,11 @@
 from typing import List, Optional
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PredictionInput(BaseModel):
-    RIDAGEYR: float
+    RIDAGEYR: float = Field(..., ge=0, le=120)
     RIAGENDR: int
-    BMXBMI: float
+    BMXBMI: float = Field(..., ge=0)
     PAQ605: float
     PAQ620: float
     SLD012: Optional[float] = None

@@ -1,7 +1,48 @@
 from fastapi.testclient import TestClient
 from app.main import app
+import pytest
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    from unittest.mock import MagicMock
+    import app.model_loader as ml
+
+    # Mock model
+    ml.model = MagicMock()
+    ml.threshold = 0.5
+
+    ml.model.predict.return_value = [1]
+    ml.model.predict_proba.return_value = [[0.2, 0.8]]
+
+    # ADD THESE (CRITICAL)
+    ml.imputer = {
+        "replace_value": None,
+        "DR1TKCAL": 2000,
+        "DR1TSUGR": 50,
+        "DR1TTFAT": 60,
+        "DR1TPROT": 70,
+        "DR1TSODI": 2500,
+        "DBD900": 1,
+        "SLD012": 7,
+        "INDFMMPI": 2.5,
+        "epsilon": 1e-6,
+    }
+
+    ml.train_columns = [
+        "protein_ratio",
+        "sugar_ratio",
+        "sodium_density",
+        "fast_food_ratio",
+        "calorie_activity",
+        "fat_calorie_ratio",
+        "log_calories",
+        "log_sodium",
+    ]
+
+    from app.main import app
+
+    return TestClient(app)
 
 
 # -----------------------------
@@ -21,7 +62,7 @@ def test_import_app():
 # -----------------------------
 # 3. Health endpoint test
 # -----------------------------
-def test_health():
+def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
@@ -30,7 +71,7 @@ def test_health():
 # -----------------------------
 # 4. Valid prediction test
 # -----------------------------
-def test_predict_valid():
+def test_predict_valid(client):
     payload = {
         "RIDAGEYR": 35,
         "RIAGENDR": 2,
@@ -63,7 +104,7 @@ def test_predict_valid():
 # -----------------------------
 # 5. Invalid input test
 # -----------------------------
-def test_predict_invalid_input():
+def test_predict_invalid_input(client):
     payload = {"RIDAGEYR": "invalid"}
 
     response = client.post("/predict", json=payload)
@@ -74,7 +115,7 @@ def test_predict_invalid_input():
 # -----------------------------
 # 6. Batch prediction test
 # -----------------------------
-def test_batch_predict():
+def test_batch_predict(client):
     payload = {
         "records": [
             {
@@ -106,7 +147,7 @@ def test_batch_predict():
 # -----------------------------
 # 7. Missing values handling test
 # -----------------------------
-def test_missing_values_handling():
+def test_missing_values_handling(client):
     payload = {
         "RIDAGEYR": 40,
         "RIAGENDR": 1,
@@ -131,7 +172,7 @@ def test_missing_values_handling():
     assert response.status_code == 200
 
 
-def test_response_structure():
+def test_response_structure(client):
     payload = {
         "RIDAGEYR": 30,
         "RIAGENDR": 1,
@@ -149,7 +190,7 @@ def test_response_structure():
     assert isinstance(data["probability"], float)
 
 
-def test_invalid_range():
+def test_invalid_range(client):
     payload = {
         "RIDAGEYR": -10,  # invalid age
         "RIAGENDR": 1,

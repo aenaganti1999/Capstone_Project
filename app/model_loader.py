@@ -1,9 +1,20 @@
 import joblib
 from pathlib import Path
 
-artifact_path = Path("artifacts/model")
+# globals (initially empty)
+model = None
+imputer = None
+train_columns = None
+threshold = None
 
-model = joblib.load(artifact_path / "model.joblib")
-train_columns = joblib.load(artifact_path / "train_columns.joblib")
-imputer = joblib.load(artifact_path / "imputer.joblib")
-threshold = joblib.load(artifact_path / "threshold.joblib")
+
+def load_artifacts():
+    global model, imputer, train_columns, threshold
+
+    if model is None or not hasattr(model, "predict"):
+        base_path = Path("artifacts")
+
+        model = joblib.load(base_path / "model" / "model.joblib")
+        imputer = joblib.load(base_path / "imputer.joblib")
+        train_columns = joblib.load(base_path / "train_columns.joblib")
+        threshold = joblib.load(base_path / "threshold.joblib")
