@@ -135,14 +135,18 @@ Activities:
 ---
 
 #### Phase 2B: Docker & Local Deployment 
-**Objective:** Containerize API for consistent environments
+**Objective:** Containerize the FastAPI-based ML prediction service to ensure consistent, reproducible environments across development and production.
 
-Activities:
-- Create Dockerfile (Python 3.10 slim base)
-- Create docker-compose.yml for local orchestration
-- Test locally—verify API endpoints work in container
-- Document deployment steps
-
+Activities
+- Dockerfile:
+    - Built container using Python 3.10 slim, installed dependencies via pyproject.toml and uv.lock, and configured FastAPI with uvicorn.
+- docker-compose.yml:
+    - Set up service with port mapping, container name, and volume for artifacts.
+- Local Testing:
+    - Built and ran container using docker-compose; verified /docs, /health, /predict, and /batch_predict.
+- Debugging:
+    - Checked logs, validated model loading, and ensured preprocessing + validation worked inside container.
+           
 **Why this matters:** Deploy same code to dev/prod with zero environment surprises  
 **Deliverables:** Dockerfile, docker-compose.yml, deployment guide  
 
