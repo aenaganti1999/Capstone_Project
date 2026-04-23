@@ -23,10 +23,10 @@ class PredictionInput(BaseModel):
 
 class BatchPredictionInput(BaseModel):
     records: List[PredictionInput]
-    
+
 
 class PredictionResponse(BaseModel):
     prediction: int
     probability: float
     threshold: float
-    latency_seconds: float 
+    latency_seconds: float
