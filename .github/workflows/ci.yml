@@ -26,7 +26,7 @@ jobs:
 
     - name: Run linting
       run: |
-        uv run flake8 .
+        uv run flake8 app tests --max-line-length=88
         uv run black --check .
 
     - name: Run tests
@@ -35,7 +35,4 @@ jobs:
     - name: Build Docker image
       run: docker build -t obesity-api .
 
-    - name: Run linting
-      run: |
-        uv run flake8 app tests --max-line-length=88
-        uv run black --check .
+    
