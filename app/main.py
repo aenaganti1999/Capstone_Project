@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from typing import List
 import logging
-from .schema import PredictionInput, PredictionResponse
+from .schema import PredictionInput, PredictionResponse, BatchPredictionInput
 from .preprocess import preprocess_input
 from .model_loader import model, threshold
 
@@ -79,13 +79,13 @@ def predict(input_data: PredictionInput):
 
 # Batch prediction
 @app.post("/batch_predict")
-def batch_predict(inputs: List[PredictionInput]):
+def batch_predict(inputs: BatchPredictionInput):
     try:
         results = []
 
         start = time.time()
 
-        for item in inputs:
+        for item in inputs.records:
             input_dict = item.model_dump()
             processed = preprocess_input(input_dict)
 
@@ -100,7 +100,7 @@ def batch_predict(inputs: List[PredictionInput]):
 
         latency = time.time() - start
 
-        logger.info(f"Batch size={len(inputs)}, latency={latency:.4f}s")
+        logger.info(f"Batch size={len(inputs.records)}, latency={latency:.4f}s")
 
         return {
             "results": results,

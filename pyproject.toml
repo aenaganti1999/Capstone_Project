@@ -3,7 +3,7 @@ name = "obesity-prediction-api"
 version = "0.1.0"
 description = "FastAPI service for obesity prediction"
 
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "fastapi>=0.131.0",
     "uvicorn>=0.41.0",
@@ -13,10 +13,21 @@ dependencies = [
     "scikit-learn>=1.2.0",
     "xgboost>=2.0.3",
     "joblib>=1.3.0",
-    "ipykernel>=7.2.0",
-    "pip>=26.0.1",
 ]
 
 [tool.uv]
+
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "flake8>=7.3.0",
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ipykernel>=7.2.0"
+
+]
+[tool.pytest.ini_options]
+pythonpath = ["."]
 # uv-specific settings (optional for now)
 

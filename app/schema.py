@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 class PredictionInput(BaseModel):
@@ -6,17 +8,20 @@ class PredictionInput(BaseModel):
     BMXBMI: float
     PAQ605: float
     PAQ620: float
-    SLD012: float
-    INDFMMPI: float
+    SLD012: Optional[float] = None
+    INDFMMPI: Optional[float] = None
     BPQ020: float
-    DR1TKCAL: float
-    DR1TSUGR: float
-    DR1TTFAT: float
-    DR1TPROT: float
-    DR1TSODI: float
+    DR1TKCAL: Optional[float] = None
+    DR1TSUGR: Optional[float] = None
+    DR1TTFAT: Optional[float] = None
+    DR1TPROT: Optional[float] = None
+    DR1TSODI: Optional[float] = None
     DBD895: float
-    DBD900: float
+    DBD900: Optional[float] = None
 
+class BatchPredictionInput(BaseModel):
+    records: List[PredictionInput]
+    
 class PredictionResponse(BaseModel):
     prediction: int
     probability: float

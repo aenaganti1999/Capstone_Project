@@ -19,6 +19,12 @@ def preprocess_input(data: dict):
     df["SLD012"] = df["SLD012"].fillna(imputer["SLD012"])
     df["INDFMMPI"] = df["INDFMMPI"].fillna(imputer["INDFMMPI"])
 
+    # Fix dtype issues (VERY IMPORTANT)
+    numeric_cols = ['DR1TKCAL','DR1TSUGR','DR1TTFAT','DR1TPROT','DR1TSODI',
+    'SLD012','INDFMMPI','DBD900']
+
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
     # Transformations
     df["RIAGENDR"] = df["RIAGENDR"].map({1: 0, 2: 1})
 

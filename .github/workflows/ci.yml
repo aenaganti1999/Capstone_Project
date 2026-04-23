@@ -16,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.12'   
 
     - name: Install uv
       run: pip install uv
@@ -24,5 +24,13 @@ jobs:
     - name: Install dependencies
       run: uv sync
 
-    - name: Run basic check
-      run: python -c "print('CI is working')"
+    - name: Run linting
+      run: |
+        uv run flake8 .
+        uv run black --check .
+
+    - name: Run tests
+      run: uv run pytest --cov=app --cov-report=term-missing
+
+    - name: Build Docker image
+      run: docker build -t obesity-api .
