@@ -29,5 +29,10 @@ dev = [
 ]
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.flake8]
+exclude = [".venv", "__pycache__", ".git"]
+max-line-length = 88
+
 # uv-specific settings (optional for now)
 

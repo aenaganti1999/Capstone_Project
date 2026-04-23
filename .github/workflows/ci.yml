@@ -34,3 +34,8 @@ jobs:
 
     - name: Build Docker image
       run: docker build -t obesity-api .
+
+    - name: Run linting
+      run: | 
+        uv run flake8 . --exclude=.venv,__pycache__,.git
+        uv run black --check .
