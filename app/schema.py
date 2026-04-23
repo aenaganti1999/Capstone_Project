@@ -1,6 +1,7 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
 
 class PredictionInput(BaseModel):
     RIDAGEYR: float
@@ -19,11 +20,13 @@ class PredictionInput(BaseModel):
     DBD895: float
     DBD900: Optional[float] = None
 
+
 class BatchPredictionInput(BaseModel):
     records: List[PredictionInput]
     
+
 class PredictionResponse(BaseModel):
     prediction: int
     probability: float
     threshold: float
-    latency_seconds: float
+    latency_seconds: float 

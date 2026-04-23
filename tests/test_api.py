@@ -46,7 +46,7 @@ def test_predict_valid():
         "DR1TPROT": 80,
         "DR1TSODI": 3000,
         "DBD895": 4,
-        "DBD900": 2
+        "DBD900": 2,
     }
 
     response = client.post("/predict", json=payload)
@@ -64,9 +64,7 @@ def test_predict_valid():
 # 5. Invalid input test
 # -----------------------------
 def test_predict_invalid_input():
-    payload = {
-        "RIDAGEYR": "invalid"
-    }
+    payload = {"RIDAGEYR": "invalid"}
 
     response = client.post("/predict", json=payload)
 
@@ -94,7 +92,7 @@ def test_batch_predict():
                 "DR1TPROT": 80,
                 "DR1TSODI": 3000,
                 "DBD895": 4,
-                "DBD900": 2
+                "DBD900": 2,
             }
         ]
     }
@@ -124,13 +122,14 @@ def test_missing_values_handling():
         "DR1TPROT": 80,
         "DR1TSODI": None,
         "DBD895": 3,
-        "DBD900": None
+        "DBD900": None,
     }
 
     response = client.post("/predict", json=payload)
 
     # Should still work due to imputation
     assert response.status_code == 200
+
 
 def test_response_structure():
     payload = {
@@ -140,7 +139,7 @@ def test_response_structure():
         "PAQ605": 1,
         "PAQ620": 2,
         "BPQ020": 2,
-        "DBD895": 3
+        "DBD895": 3,
     }
 
     response = client.post("/predict", json=payload)
@@ -148,6 +147,8 @@ def test_response_structure():
 
     assert isinstance(data["prediction"], int)
     assert isinstance(data["probability"], float)
+
+
 def test_invalid_range():
     payload = {
         "RIDAGEYR": -10,  # invalid age
@@ -156,7 +157,7 @@ def test_invalid_range():
         "PAQ605": 1,
         "PAQ620": 2,
         "BPQ020": 2,
-        "DBD895": 3
+        "DBD895": 3,
     }
 
     response = client.post("/predict", json=payload)
