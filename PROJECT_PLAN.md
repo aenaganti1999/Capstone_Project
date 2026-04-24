@@ -153,17 +153,18 @@ Activities
 ---
 
 #### Phase 2C: CI/CD Pipeline 
-**Objective:** Automate testing and deployment
+**Objective:** Automate code validation to ensure reliability and consistency before merging changes
 
 Activities:
-- GitHub Actions workflow: trigger on push/PR
-- Linting (pylint/flake8) & formatting (black)
-- Unit tests (pytest, ≥75% coverage)
-- Docker image build on merge to `main`
-- (Optional) Deploy to cloud (AWS/GCP)
+- Configured GitHub Actions workflow triggered on push and pull requests
+- Implemented linting checks using flake8 and formatting validation with black
+- Developed and executed unit tests using pytest for API endpoints and preprocessing logic
+- Added test coverage reporting using pytest-cov
+- Validated Docker build within CI to ensure container readiness
+- Debugged CI failures (dependency issues, import paths, mocking model artifacts)
 
-**Why this matters:** Catch bugs early, reduce manual errors, faster releases  
-**Deliverables:** `.github/workflows/ci.yml`, test suite  
+**Why this matters:** Automatically catches bugs, enforces code quality, and ensures the application works correctly in a clean environment before integration  
+**Deliverables:** .github/workflows/ci.yml, Automated test suite with API coverage, Lint + test + Docker validation pipeline
 
 ---
 
@@ -226,23 +227,6 @@ Activities:
 
 ---
 
-## 4. What We're Doing First vs. Next (Priority Order)
-
-### Must Complete (Critical Path) 
-1. **Model optimization & testing** 
-2. **API endpoints**  
-3. **Docker containerization** 
-4. **Basic CI/CD** 
-5. **Documentation** 
-
-### Should Complete (High Value) 
-6. Model artifacts versioning 
-7. Git setup & branching 
-8. Monitoring & logging 
-9. Integration testing 
-
----
-
 ## 5. How This Plan Updates
 
 **Triggers for change:**
@@ -287,25 +271,6 @@ Activities:
 
 ---
 
-## 8. Artifacts & Deliverables Summary
-
-### Week 1 Deliverables
-- `models/v1/logistic_regression_model.pkl`, `scaler.pkl`, feature metadata
-- Data splits and quality report
-- `docs/FEATURE_ENGINEERING.md`, `GIT_WORKFLOW.md`
-- Git repo with `main`, `dev`, `production` branches
-
-### Week 2 Deliverables  
-- `api/main.py` - FastAPI service with 3 endpoints
-- `Dockerfile`, `docker-compose.yml`
-- `.github/workflows/ci.yml` - GitHub Actions CI/CD
-- `monitoring/drift_detector.py`, logging setup
-- Comprehensive docs: README, API_DOCUMENTATION, DEPLOYMENT_GUIDE, MODEL_CARD
-- Test suite with ≥75% coverage
-- `v1.0.0` GitHub Release
-
----
-
 ## 9. Repository Structure
 ```
 NHANES_Capstone/
@@ -326,11 +291,11 @@ NHANES_Capstone/
 │   ├── processed/                         # Cleaned data
 │   └── splits/                            # Train/test files
 │
-├── api/                                   # FastAPI service (Week 2)
+├── app/                                   # FastAPI service (Week 2)
 │   ├── main.py
 │   ├── models.py
 │   ├── config.py
-│   └── requirements.txt
+│   
 │
 ├── tests/                                 # Automated tests
 │   ├── test_api_basic.py
@@ -364,21 +329,7 @@ NHANES_Capstone/
 ## 14. Quick Links & References
 
 - **NHANES Data Portal:** https://wwwn.cdc.gov/nchs/nhanes/
-- **FastAPI Docs:** https://fastapi.tiangolo.com/
-- **GitHub Actions:** https://docs.github.com/en/actions
-- **Docker Docs:** https://docs.docker.com/
 
 ---
-
-## Questions? Check These Docs First
-
-| Question | Doc |
-|----------|-----|
-| How do we encode features? | `FEATURE_ENGINEERING.md` |
-| How do I deploy the API? | `DEPLOYMENT_GUIDE.md` |
-| What are the model limits? | `MODEL_CARD.md` |
-| When should we retrain? | `MONITORING_GUIDE.md` |
-| How do we use git? | `GIT_WORKFLOW.md` |
-| API not working? | `TROUBLESHOOTING.md` |
 
 
