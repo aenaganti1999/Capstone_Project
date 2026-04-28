@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class PredictionInput(BaseModel):
     RIDAGEYR: float = Field(..., ge=0, le=120)
     RIAGENDR: int
-    BMXBMI: float = Field(..., ge=0)
+    BMXBMI: float = Field(..., ge=0)# This is not required for inference, but we can impute it during training and use the imputed value for prediction. This way we ca maintain consistency between training and inference.
     PAQ605: float
     PAQ620: float
     SLD012: Optional[float] = None
