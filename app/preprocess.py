@@ -4,7 +4,7 @@ import app.model_loader as ml
 
 
 def preprocess_input(data: dict):
-    df = pd.DataFrame([data])#overhead of creating a dataframe for each record, instead we can create a dataframe for the entire batch and preprocess it together. This would be more efficient.
+    df = pd.DataFrame([data])  
     df = df.apply(pd.to_numeric, errors="coerce")
     required_cols = [
         "DR1TKCAL",
