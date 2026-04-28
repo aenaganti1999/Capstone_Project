@@ -232,20 +232,6 @@ Activities:
 
 ---
 
-#### Phase 2G: Release & Presentation  
-**Objective:** Ship v1.0.0 and present to stakeholders
-
-Activities:
-- Merge `dev` → `main`, create GitHub Release
-- Tag as `v1.0.0`, update CHANGELOG.md
-- Prepare 5-min demo + slides
-- Live API demo (predictions on real data)
-
-**Why this matters:** Formal handoff, stakeholder communication  
-**Deliverables:** v1.0.0 release, presentation  
-
----
-
 ## 5. How This Plan Updates
 
 **Triggers for change:**
@@ -291,9 +277,6 @@ Activities:
 ---
 
 ## 9. Repository Structure
-```
-
-```
 
 ---
 
