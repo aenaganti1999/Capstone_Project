@@ -4,7 +4,7 @@ import app.model_loader as ml
 
 
 def preprocess_input(data: dict):
-    df = pd.DataFrame([data])  
+    df = pd.DataFrame([data])
     df = df.apply(pd.to_numeric, errors="coerce")
     required_cols = [
         "DR1TKCAL",
