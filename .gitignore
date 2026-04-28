@@ -1,6 +1,5 @@
 .data
 .model
 additional
-artifacts
 .DS_Store
 __pycache__/
