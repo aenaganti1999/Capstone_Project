@@ -65,9 +65,9 @@ def predict(input_data: PredictionInput):
         latency = time.time() - start
 
         logger.info(
+            f"pred={prediction},"
             f"prob={probability:.4f},"
             f"threshold={ml.threshold},"
-            f"pred={prediction},"
             f"latency={latency:.4f}s"
         )
 

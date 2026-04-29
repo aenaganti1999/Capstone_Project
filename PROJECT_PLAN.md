@@ -155,16 +155,35 @@ Activities
 #### Phase 2C: CI/CD Pipeline 
 **Objective:** Automate code validation to ensure reliability and consistency before merging changes
 
+### Continuous Integration (CI)
+
 Activities:
 - Configured GitHub Actions workflow triggered on push and pull requests
-- Implemented linting checks using flake8 and formatting validation with black
-- Developed and executed unit tests using pytest for API endpoints and preprocessing logic
-- Added test coverage reporting using pytest-cov
-- Validated Docker build within CI to ensure container readiness
-- Debugged CI failures (dependency issues, import paths, mocking model artifacts)
+- Set up Python 3.12 environment using `actions/setup-python`
+- Installed dependencies using `uv` for consistent and reproducible environments
+- Implemented linting using `flake8` and formatting checks using `black`
+- Developed unit tests using `pytest` for API endpoints and preprocessing logic
+- Added test coverage reporting using `pytest-cov`
+- Handled mocking of model artifacts to enable isolated test execution
+- Validated Docker image build within CI to ensure container readiness
+- Debugged CI issues including dependency mismatches, import paths, and environment inconsistencies
 
-**Why this matters:** Automatically catches bugs, enforces code quality, and ensures the application works correctly in a clean environment before integration  
-**Deliverables:** .github/workflows/ci.yml, Automated test suite with API coverage, Lint + test + Docker validation pipeline
+### Continuous Deployment (CD)
+
+- Manually deployed Dockerized FastAPI application on AWS EC2
+- Configured EC2 instance with Docker and required dependencies
+- Built and ran containerized application exposing API endpoints
+- Verified deployment using live API endpoints and Swagger UI
+- Implemented container restart policy for basic reliability
+
+**Why this matters:**  
+- CI ensures code quality, catches bugs early, and validates functionality in a clean environment  
+- CD enables reliable deployment and demonstrates the ability to move from development to production
+**Deliverables:**  
+- `.github/workflows/ci.yml`  
+- Automated test suite with API and preprocessing coverage  
+- Dockerized application with validated build process  
+- Live deployment on AWS EC2  
 
 ---
 
@@ -199,35 +218,7 @@ Activities:
 
 ---
 
-#### Phase 2F: Integration Testing 
-**Objective:** Verify end-to-end system works
-
-Activities:
-- Data → model → API → response integration tests
-- Load testing: verify API responds in <200ms under load
-- Final code review for quality & security
-- Pre-deployment checklist
-
-**Why this matters:** Catch integration bugs before production  
-**Deliverables:** Test reports, performance benchmarks  
-
----
-
-#### Phase 2G: Release & Presentation (Apr 28) 
-**Objective:** Ship v1.0.0 and present to stakeholders
-
-Activities:
-- Merge `dev` → `main`, create GitHub Release
-- Tag as `v1.0.0`, update CHANGELOG.md
-- Prepare 5-min demo + slides
-- Live API demo (predictions on real data)
-
-**Why this matters:** Formal handoff, stakeholder communication  
-**Deliverables:** v1.0.0 release, presentation  
-
----
-
-## 5. How This Plan Updates
+## How This Plan Updates
 
 **Triggers for change:**
 - Model performance below targets → revisit feature engineering
@@ -239,90 +230,15 @@ Activities:
 
 ---
 
-## 6. Success Metrics & Targets
+## Success Metrics & Targets
 
-### Model Performance (Apr 15 baseline)
+### Model Performance 
 | Metric | Target | Why |
 |--------|--------|-----|
 | **Recall** | ≥60% | Minimize false negatives—catch patients we should |
 | **Precision** | ≥65% | Ensure flagged patients are actually at-risk; maintain provider trust |
 | **Accuracy** | ≥70% | Overall system correctness |
 | **F1-Score** | ≥0.62 | Balanced recall/precision harmony |
-
-### Deployment Targets (Apr 22+)
-| Component | Target | Success Criteria |
-|-----------|--------|-----------------|
-| **API Latency** | <200ms | Measured under typical load |
-| **Test Coverage** | ≥75% | Unit + integration tests |
-| **Uptime** | >99% | After day 1 deployment |
-| **Documentation** | 100% | README, API docs, deployment guide complete |
-
----
-
-## 7. Risk Mitigation
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Model performance below targets | Blocks deployment | Revisit features/hyperparams by Apr 17 |
-| API bottleneck | Service degradation | Load test early (Apr 27) |
-| Missing dependencies | Build failures | Maintain updated requirements.txt |
-| Data drift | Model decay | Implement drift detector (Apr 25) |
-| Team bandwidth | Schedule slippage | Weekly retrospective to reprioritize |
-
----
-
-## 9. Repository Structure
-```
-NHANES_Capstone/
-├── analyzedata.ipynb                      # Main model notebook (Week 0)
-├── PROJECT_PLAN.md                        # This file—update weekly
-├── README.md                              # (Completed Apr 26)
-│
-├── models/                                # Model versioning
-│   ├── v0/                                # (Archive)
-│   └── v1/
-│       ├── logistic_regression_model.pkl
-│       ├── scaler.pkl
-│       ├── feature_names.json
-│       └── model_metadata.json
-│
-├── data/
-│   ├── raw/                               # Original NHANES
-│   ├── processed/                         # Cleaned data
-│   └── splits/                            # Train/test files
-│
-├── app/                                   # FastAPI service (Week 2)
-│   ├── main.py
-│   ├── models.py
-│   ├── config.py
-│   
-│
-├── tests/                                 # Automated tests
-│   ├── test_api_basic.py
-│   ├── test_end_to_end.py
-│   └── test_load.py
-│
-├── monitoring/                            # Logging & monitoring (Week 2)
-│   ├── drift_detector.py
-│   └── alert_system.py
-│
-├── docs/                                  # Documentation
-│   ├── FEATURE_ENGINEERING.md
-│   ├── API_DOCUMENTATION.md
-│   ├── DEPLOYMENT_GUIDE.md
-│   ├── MODEL_CARD.md
-│   ├── MONITORING_GUIDE.md
-│   ├── GIT_WORKFLOW.md
-│   └── TROUBLESHOOTING.md
-│
-├── Dockerfile                             # Container (Apr 23)
-├── docker-compose.yml                     # Compose config (Apr 23)
-├── .github/workflows/ci.yml               # CI/CD (Apr 24)
-│
-├── .gitignore
-├── VERSION.md
-└── CHANGELOG.md
-```
 
 ---
 
