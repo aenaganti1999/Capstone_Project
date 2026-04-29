@@ -2,6 +2,24 @@
 
 **FastAPI ML service** predicting obesity risk from lifestyle factors (diet, activity, sleep). Built with Python, XGBoost, and deployed on AWS EC2 and accessible via a live API endpoint
 
+## Model Performance
+
+- **Recall**: 83%
+- **Precision**: 48%
+- **F1-Score**: 61%
+
+## System Architecture
+
+```
+Client → FastAPI → Validation → Preprocessing (feature engineering) → Model → Response
+```
+
+**Components:**
+- **API Layer** ([app/main.py](app/main.py)): 3 endpoints for health, single, batch predictions
+- **Model Loader** ([app/model_loader.py](app/model_loader.py)): Loads model artifacts once at startup for efficient inference
+- **Preprocessor** ([app/preprocess.py](app/preprocess.py)): Missing value imputation + 12 engineered features
+- **Validation** ([app/schema.py](app/schema.py)): Pydantic schemas for type safety
+
 ## Key Features
 
 - FastAPI-based ML inference API
@@ -24,20 +42,9 @@ uvicorn app.main:app --reload
 # Docker
 docker-compose up --build
 
-# Access: http://localhost:8000/docs
+# Access: 
+http://localhost:8000/docs
 ```
-
-## System Architecture
-
-```
-Client → FastAPI → Validation → Preprocessing (feature engineering) → Model → Response
-```
-
-**Components:**
-- **API Layer** ([app/main.py](app/main.py)): 3 endpoints for health, single, batch predictions
-- **Model Loader** ([app/model_loader.py](app/model_loader.py)): Loads model artifacts once at startup for efficient inference
-- **Preprocessor** ([app/preprocess.py](app/preprocess.py)): Missing value imputation + 12 engineered features
-- **Validation** ([app/schema.py](app/schema.py)): Pydantic schemas for type safety
 
 ## Prerequisites
 
@@ -86,7 +93,7 @@ curl -X POST http://localhost:8000/predict \
 {
   "prediction": 1,
   "probability": 0.75,
-  "threshold": 0.5,
+  "threshold": 0.35,
   "latency_seconds": 0.052
 }
 ```
@@ -107,9 +114,9 @@ See [Swagger UI](http://localhost:8000/docs) for full schema.
 | Algorithm | XGBoost + Feature Engineering |
 | Training Data | NHANES (10K individuals) |
 | Features | 16 input → 40+ engineered |
-| Recall | 72% |
-| Precision | 68% |
-| F1-Score | 0.70 |
+| Recall | 83% |
+| Precision | 48% |
+| F1-Score | 0.61 |
 
 **Feature engineering:** Dietary ratios, activity metrics, log transformations, missing indicators.
 

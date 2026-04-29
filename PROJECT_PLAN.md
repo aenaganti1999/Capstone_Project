@@ -218,21 +218,7 @@ Activities:
 
 ---
 
-#### Phase 2F: Integration Testing 
-**Objective:** Verify end-to-end system works
-
-Activities:
-- Data → model → API → response integration tests
-- Load testing: verify API responds in <200ms under load
-- Final code review for quality & security
-- Pre-deployment checklist
-
-**Why this matters:** Catch integration bugs before production  
-**Deliverables:** Test reports, performance benchmarks  
-
----
-
-## 5. How This Plan Updates
+## How This Plan Updates
 
 **Triggers for change:**
 - Model performance below targets → revisit feature engineering
@@ -244,39 +230,15 @@ Activities:
 
 ---
 
-## 6. Success Metrics & Targets
+## Success Metrics & Targets
 
-### Model Performance (Apr 15 baseline)
+### Model Performance 
 | Metric | Target | Why |
 |--------|--------|-----|
 | **Recall** | ≥60% | Minimize false negatives—catch patients we should |
 | **Precision** | ≥65% | Ensure flagged patients are actually at-risk; maintain provider trust |
 | **Accuracy** | ≥70% | Overall system correctness |
 | **F1-Score** | ≥0.62 | Balanced recall/precision harmony |
-
-### Deployment Targets (Apr 22+)
-| Component | Target | Success Criteria |
-|-----------|--------|-----------------|
-| **API Latency** | <200ms | Measured under typical load |
-| **Test Coverage** | ≥75% | Unit + integration tests |
-| **Uptime** | >99% | After day 1 deployment |
-| **Documentation** | 100% | README, API docs, deployment guide complete |
-
----
-
-## 7. Risk Mitigation
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Model performance below targets | Blocks deployment | Revisit features/hyperparams by Apr 17 |
-| API bottleneck | Service degradation | Load test early (Apr 27) |
-| Missing dependencies | Build failures | Maintain updated requirements.txt |
-| Data drift | Model decay | Implement drift detector (Apr 25) |
-| Team bandwidth | Schedule slippage | Weekly retrospective to reprioritize |
-
----
-
-## 9. Repository Structure
 
 ---
 
