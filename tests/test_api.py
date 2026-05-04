@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
-from app.main import app
+import numpy as np
+from unittest.mock import patch
 import pytest
 
 
@@ -13,7 +14,7 @@ def client():
     ml.threshold = 0.5
 
     ml.model.predict.return_value = [1]
-    ml.model.predict_proba.return_value = [[0.2, 0.8]]
+    ml.model.predict_proba.return_value = np.array([[0.2, 0.8]])
 
     # ADD THESE (CRITICAL)
     ml.imputer = {
@@ -45,32 +46,14 @@ def client():
     return TestClient(app)
 
 
-# -----------------------------
-# 1. Basic sanity test
-# -----------------------------
-def test_basic():
-    assert 1 + 1 == 2
-
-
-# -----------------------------
-# 2. Import test
-# -----------------------------
-def test_import_app():
-    assert app is not None
-
-
-# -----------------------------
-# 3. Health endpoint test
-# -----------------------------
+# 1. Health endpoint test
 def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
-# -----------------------------
-# 4. Valid prediction test
-# -----------------------------
+# 2. Valid prediction test
 def test_predict_valid(client):
     payload = {
         "RIDAGEYR": 35,
@@ -101,9 +84,7 @@ def test_predict_valid(client):
     assert "latency_seconds" in data
 
 
-# -----------------------------
-# 5. Invalid input test
-# -----------------------------
+# 3. Invalid input test
 def test_predict_invalid_input(client):
     payload = {"RIDAGEYR": "invalid"}
 
@@ -112,9 +93,7 @@ def test_predict_invalid_input(client):
     assert response.status_code == 422
 
 
-# -----------------------------
-# 6. Batch prediction test
-# -----------------------------
+# 4. Batch prediction test
 def test_batch_predict(client):
     payload = {
         "records": [
@@ -141,12 +120,14 @@ def test_batch_predict(client):
     response = client.post("/batch_predict", json=payload)
 
     assert response.status_code == 200
-    assert "results" in response.json()
+    data = response.json()
+
+    assert "results" in data
+    assert len(data["results"]) == 1
+    assert "prediction" in data["results"][0]
 
 
-# -----------------------------
-# 7. Missing values handling test
-# -----------------------------
+# 5. Missing values handling test
 def test_missing_values_handling(client):
     payload = {
         "RIDAGEYR": 40,
@@ -172,34 +153,112 @@ def test_missing_values_handling(client):
     assert response.status_code == 200
 
 
-def test_response_structure(client):
+def test_threshold_behavior(client):
+    import app.model_loader as ml
+    import numpy as np
+
+    # Force probability below threshold
+    ml.model.predict_proba.return_value = np.array([[0.8, 0.2]])
+    ml.threshold = 0.5
+
     payload = {
-        "RIDAGEYR": 30,
+        "RIDAGEYR": 35,
         "RIAGENDR": 1,
-        "BMXBMI": 25,
-        "PAQ605": 1,
-        "PAQ620": 2,
-        "BPQ020": 2,
-        "DBD895": 3,
+        "BMXBMI": 27.5,
+        "PAQ605": 2,
+        "PAQ620": 3,
+        "SLD012": 7,
+        "INDFMMPI": 2.5,
+        "BPQ020": 1,
+        "DR1TKCAL": 2200,
+        "DR1TSUGR": 60,
+        "DR1TTFAT": 70,
+        "DR1TPROT": 80,
+        "DR1TSODI": 2500,
+        "DBD895": 4,
+        "DBD900": 2,
     }
 
     response = client.post("/predict", json=payload)
     data = response.json()
 
-    assert isinstance(data["prediction"], int)
-    assert isinstance(data["probability"], float)
+    assert data["prediction"] == 0
 
 
-def test_invalid_range(client):
+def test_batch_vs_single_consistency(client):
     payload = {
-        "RIDAGEYR": -10,  # invalid age
+        "RIDAGEYR": 35,
         "RIAGENDR": 1,
-        "BMXBMI": 25,
+        "BMXBMI": 27.5,
+        "PAQ605": 2,
+        "PAQ620": 3,
+        "SLD012": 7,
+        "INDFMMPI": 2.5,
+        "BPQ020": 1,
+        "DR1TKCAL": 2200,
+        "DR1TSUGR": 60,
+        "DR1TTFAT": 70,
+        "DR1TPROT": 80,
+        "DR1TSODI": 2500,
+        "DBD895": 4,
+        "DBD900": 2,
+    }
+
+    single = client.post("/predict", json=payload).json()
+
+    batch = client.post("/batch_predict", json={"records": [payload]}).json()
+
+    assert single["prediction"] == batch["results"][0]["prediction"]
+
+
+def test_model_failure(client):
+
+    with patch(
+        "app.model_loader.model.predict_proba", side_effect=Exception("Model crashed")
+    ):
+
+        payload = {
+            "RIDAGEYR": 35,
+            "RIAGENDR": 1,
+            "BMXBMI": 27.5,
+            "PAQ605": 2,
+            "PAQ620": 3,
+            "SLD012": 7,
+            "INDFMMPI": 2.5,
+            "BPQ020": 1,
+            "DR1TKCAL": 2200,
+            "DR1TSUGR": 60,
+            "DR1TTFAT": 70,
+            "DR1TPROT": 80,
+            "DR1TSODI": 2500,
+            "DBD895": 4,
+            "DBD900": 2,
+        }
+
+        response = client.post("/predict", json=payload)
+
+        assert response.status_code == 500
+
+
+def test_invalid_gender(client):
+    payload = {
+        "RIDAGEYR": 45,
+        "RIAGENDR": -1,  # invalid
+        "BMXBMI": 28.5,
+        "PAQ620": 3.0,
+        "SLD012": 7.0,
         "PAQ605": 1,
-        "PAQ620": 2,
-        "BPQ020": 2,
-        "DBD895": 3,
+        "INDFMMPI": 2.5,
+        "BPQ020": 1.0,
+        "DR1TKCAL": 2000,
+        "DR1TSUGR": 50,
+        "DR1TTFAT": 65,
+        "DR1TPROT": 75,
+        "DR1TSODI": 2300,
+        "DBD895": 15,
+        "DBD900": 2,
     }
 
     response = client.post("/predict", json=payload)
-    assert response.status_code in [200, 422]
+
+    assert response.status_code == 422
