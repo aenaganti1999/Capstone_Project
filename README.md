@@ -4,9 +4,9 @@
 
 ## Model Performance
 
-- **Recall**: 83%
-- **Precision**: 48%
-- **F1-Score**: 61%
+- **Recall**: 89%
+- **Precision**: 46%
+- **F1-Score**: 60%
 
 ## System Architecture
 
@@ -114,9 +114,9 @@ See [Swagger UI](http://localhost:8000/docs) for full schema.
 | Algorithm | XGBoost + Feature Engineering |
 | Training Data | NHANES (10K individuals) |
 | Features | 16 input → 40+ engineered |
-| Recall | 83% |
-| Precision | 48% |
-| F1-Score | 0.61 |
+| Recall | 89% |
+| Precision | 46% |
+| F1-Score | 60% |
 
 **Feature engineering:** Dietary ratios, activity metrics, log transformations, missing indicators.
 

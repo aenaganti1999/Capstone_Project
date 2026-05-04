@@ -1,11 +1,53 @@
 import pandas as pd
 import numpy as np
+from typing import Union, List
 import app.model_loader as ml
 
 
-def preprocess_input(data: dict):
-    df = pd.DataFrame([data])
-    df = df.apply(pd.to_numeric, errors="coerce")
+def preprocess_input(data: Union[dict, List[dict]]) -> pd.DataFrame:
+    """
+    Preprocess input data for model inference.
+
+    Args:
+        data: Single dict or list of dicts
+
+    Returns:
+        Preprocessed DataFrame ready for model inference
+    """
+    # Handle both single and batch inputs
+    if isinstance(data, dict):
+        df = pd.DataFrame([data])
+    else:
+        df = pd.DataFrame(data)
+
+    # Selective type conversion (only required columns)
+    numeric_cols = [
+        "RIDAGEYR",
+        "RIAGENDR",
+        "BMXBMI",
+        "PAQ605",
+        "PAQ620",
+        "SLD012",
+        "INDFMMPI",
+        "BPQ020",
+        "DR1TKCAL",
+        "DR1TSUGR",
+        "DR1TTFAT",
+        "DR1TPROT",
+        "DR1TSODI",
+        "DBD895",
+        "DBD900",
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Extract imputer values once
+    imputer = ml.imputer
+    replace_val = imputer.get("replace_value")
+    epsilon = imputer.get("epsilon", 1e-6)
+
+    # Add missing required columns
     required_cols = [
         "DR1TKCAL",
         "DR1TSUGR",
@@ -18,35 +60,31 @@ def preprocess_input(data: dict):
         "INDFMMPI",
         "PAQ605",
     ]
-
     for col in required_cols:
         if col not in df.columns:
             df[col] = np.nan
 
-    # Replace weird values
-    replace_val = ml.imputer.get("replace_value")
-
+    # Replace special missing value markers
     if replace_val is not None:
         df = df.replace(replace_val, np.nan)
 
-    # Missing value handling
-    for col in ["DR1TKCAL", "DR1TSUGR", "DR1TTFAT", "DR1TPROT", "DR1TSODI"]:
+    # Efficient missing value handling with VECTORIZED operations
+    impute_cols = ["DR1TKCAL", "DR1TSUGR", "DR1TTFAT", "DR1TPROT", "DR1TSODI"]
+    for col in impute_cols:
         df[col + "_missing"] = df[col].isna().astype(int)
-        df[col] = df[col].fillna(ml.imputer[col])
+        df[col] = df[col].fillna(imputer[col])
 
     df["DBD900_missing"] = df["DBD900"].isna().astype(int)
-    df["DBD900"] = df["DBD900"].fillna(ml.imputer["DBD900"])
+    df["DBD900"] = df["DBD900"].fillna(imputer["DBD900"])
     df["DBD895"] = df["DBD895"].fillna(0)
-    df["SLD012"] = df["SLD012"].fillna(ml.imputer["SLD012"])
-    df["INDFMMPI"] = df["INDFMMPI"].fillna(ml.imputer["INDFMMPI"])
+    df["SLD012"] = df["SLD012"].fillna(imputer["SLD012"])
+    df["INDFMMPI"] = df["INDFMMPI"].fillna(imputer["INDFMMPI"])
 
-    # Transformations
-    df["RIAGENDR"] = df["RIAGENDR"].map({1: 0, 2: 1}).fillna(0)
+    # Vectorized gender mapping (faster than .map())
+    df["RIAGENDR"] = df["RIAGENDR"].replace({1: 0, 2: 1}).fillna(0)
 
-    # Feature engineering
-    eps = ml.imputer.get("epsilon", 1e-6)
-
-    calories = df["DR1TKCAL"] + eps
+    # Feature engineering (vectorized operations work on all rows)
+    calories = df["DR1TKCAL"] + epsilon
 
     df["protein_ratio"] = df["DR1TPROT"] / calories
     df["sugar_ratio"] = df["DR1TSUGR"] / calories
@@ -58,7 +96,7 @@ def preprocess_input(data: dict):
     df["log_calories"] = np.log1p(df["DR1TKCAL"].fillna(0))
     df["log_sodium"] = np.log1p(df["DR1TSODI"].fillna(0))
 
-    # Align columns
+    # Align columns to match training schema
     df = df.reindex(columns=ml.train_columns, fill_value=0)
 
     return df
