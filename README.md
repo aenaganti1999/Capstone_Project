@@ -176,7 +176,7 @@ Access at: `http://your-ec2-ip:8000/docs`
 
 ---
 
-## CI/CD Pipeline
+## CI Pipeline
 
 - **GitHub Actions**: Runs on every push/PR
 - **Linting**: Flake8, Black formatting
@@ -184,6 +184,10 @@ Access at: `http://your-ec2-ip:8000/docs`
 - **Build**: Docker image validation
 
 See `.github/workflows/ci.yml` for details.
+
+## Deployment
+
+- Application is manually deployed on an Amazon EC2 instance for low-cost hosting
 
 ---
 

@@ -202,22 +202,6 @@ Activities:
 
 ---
 
-#### Phase 2E: Documentation 
-**Objective:** Enable team onboarding and handoff
-
-Activities:
-- README: problem, quick start (local + Docker), examples
-- API_DOCUMENTATION.md: all endpoints, request/response samples
-- DEPLOYMENT_GUIDE.md: step-by-step deployment
-- MODEL_CARD.md: model description, limitations, ethical considerations
-- CONTRIBUTING.md: code style, PR process
-- TROUBLESHOOTING.md: common issues & fixes
-
-**Why this matters:** Reduces onboarding time; documents assumptions  
-**Deliverables:** 6+ docs, comprehensive README  
-
----
-
 ## How This Plan Updates
 
 **Triggers for change:**
@@ -226,19 +210,7 @@ Activities:
 - Infrastructure constraints → adjust deployment approach
 - Stakeholder feedback → update metric targets or priorities
 
-**Version tracking:** Use git to track plan changes (update CHANGELOG.md)
-
----
-
-## Success Metrics & Targets
-
-### Model Performance 
-| Metric | Target | Why |
-|--------|--------|-----|
-| **Recall** | ≥60% | Minimize false negatives—catch patients we should |
-| **Precision** | ≥65% | Ensure flagged patients are actually at-risk; maintain provider trust |
-| **Accuracy** | ≥70% | Overall system correctness |
-| **F1-Score** | ≥0.62 | Balanced recall/precision harmony |
+**Version tracking:** Use git to track plan changes 
 
 ---
 

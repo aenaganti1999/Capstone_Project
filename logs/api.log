@@ -829,3 +829,8 @@ NameError: name 'latency' is not defined
 2026-05-04 13:35:40,640 - [INFO] - [STARTUP] - Loading model artifacts at startup...
 2026-05-04 13:35:41,371 - [INFO] - [STARTUP] - Model loaded successfully.
 2026-05-04 13:35:41,371 - [INFO] - [STARTUP] - Application startup complete.
+2026-05-04 17:34:04,548 - [INFO] - [fa72e81d] - request_start | method=GET | path=/health
+2026-05-04 17:34:04,561 - [INFO] - [fa72e81d] - request_end | status=200 | latency=0.0150s
+2026-05-04 17:34:09,339 - [INFO] - [f6e6729f] - request_start | method=POST | path=/predict
+2026-05-04 17:34:09,361 - [ERROR] - [f6e6729f] - validation_error | RIAGENDR=Input should be 1 or 2
+2026-05-04 17:34:09,362 - [INFO] - [f6e6729f] - request_end | status=422 | latency=0.0230s
