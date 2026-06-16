@@ -1,15 +1,17 @@
 import joblib
 from pathlib import Path
+import shap
 
 # globals (initially empty)
 model = None
 imputer = None
 train_columns = None
 threshold = None
+explainer = None
 
 
 def load_artifacts():
-    global model, imputer, train_columns, threshold
+    global model, imputer, train_columns, threshold, explainer
 
     if model is None or not hasattr(model, "predict"):
         base_path = Path("artifacts")
@@ -18,3 +20,4 @@ def load_artifacts():
         imputer = joblib.load(base_path / "model" / "imputer.joblib")
         train_columns = joblib.load(base_path / "model" / "train_columns.joblib")
         threshold = joblib.load(base_path / "model" / "threshold.joblib")
+        explainer = shap.TreeExplainer(model)

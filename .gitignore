@@ -1,5 +1,17 @@
 .data
 .model
+.env
+.venv
+
+uv.lock
+
+predictions.json
+baseline_stats.json
+
+logs
+
+PROJECT_PLAN.md
+
 additional
 .DS_Store
 __pycache__/
