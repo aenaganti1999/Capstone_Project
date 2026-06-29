@@ -8,16 +8,22 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 from app import model_loader as ml
-from .schema import PredictionInput, PredictionResponse, BatchPredictionInput, ExplainRequest, ExplainResponse
+from .schema import (
+    PredictionInput,
+    PredictionResponse,
+    BatchPredictionInput,
+    ExplainRequest,
+    ExplainResponse,
+)
 from app.preprocess import preprocess_input
 from app.explainability import get_top_factors
 from app.llm import generate_explanation
-from app.monitoring import generate_monitoring_report
 from app.monitoring import generate_monitoring_report, generate_drift_report
-import shap
+from app.evaluation import generate_evaluation_report
 
 # Request ID context variable
 request_id: ContextVar[str] = ContextVar("request_id", default="")
+
 
 # Custom logging filter to include request ID
 class RequestIDFilter(logging.Filter):
@@ -25,6 +31,7 @@ class RequestIDFilter(logging.Filter):
         rid = request_id.get()
         record.request_id = rid if rid else "STARTUP"
         return True
+
 
 # -------------------------------
 # Logging Setup
@@ -148,35 +155,40 @@ def predict(input_data: PredictionInput):
         processed = preprocess_input(input_dict)
         try:
             probability = model.predict_proba(processed)[0][1]
-            
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
         prediction = int(probability >= threshold)
-        top_factors = get_top_factors(processed,ml.explainer)
+        top_factors = get_top_factors(processed, ml.explainer)
+
+        print("TOP FACTORS FROM SHAP:")
+        print(top_factors)
+
+        explanation = generate_explanation(
+            prediction=prediction,
+            probability=float(probability),
+            top_factors=top_factors,
+            input_data=input_dict,
+        )
+
         latency = time.time() - start
+
         from app.prediction_store import save_prediction
         import uuid
         from datetime import datetime, UTC
+
         prediction_record = {
-        "prediction_id": str(uuid.uuid4()),
-
-        "timestamp":
-        datetime.now(UTC).isoformat(),
-        "input_data": input_dict,
-
-        "prediction": prediction,
-
-        "probability":
-        float(probability),
-
-        "top_factors":
-        top_factors,
-        
-        "latency_seconds": float(latency)
-        
-    }
+            "prediction_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(UTC).isoformat(),
+            "input_data": input_dict,
+            "prediction": prediction,
+            "probability": float(probability),
+            "top_factors": top_factors,
+            "explanation": explanation,
+            "latency_seconds": float(latency),
+        }
         save_prediction(prediction_record)
-
 
         logger.info(
             f"prediction | pred={prediction} | prob={probability:.4f} | "
@@ -188,8 +200,8 @@ def predict(input_data: PredictionInput):
             probability=float(probability),
             threshold=float(threshold),
             latency_seconds=round(latency, 4),
-            top_factors=top_factors
-            
+            top_factors=top_factors,
+            explanation=explanation,
         )
 
     except Exception as e:
@@ -247,31 +259,31 @@ def batch_predict(inputs: BatchPredictionInput):
         )
         raise HTTPException(status_code=500, detail="Model inference failed")
 
-@app.post(
-    "/explain",
-    response_model=ExplainResponse
-)
-def explain(
-    request: ExplainRequest
-):
 
+@app.post("/explain", response_model=ExplainResponse)
+def explain(request: ExplainRequest):
+    print("EXPLAIN REQUEST:")
+    print(request.model_dump())
     explanation = generate_explanation(
         prediction=request.prediction,
         probability=request.probability,
-        top_factors=request.top_factors
+        top_factors=request.top_factors,
+        input_data=request.input_data.model_dump(),
     )
+    print(request.top_factors)
 
-    return ExplainResponse(
-        explanation=explanation
-    )
+    return ExplainResponse(explanation=explanation)
+
+
 @app.get("/monitoring")
 def monitoring():
 
     return generate_monitoring_report()
 
+
 @app.get("/monitoring/stats")
 def monitoring_stats():
-    
+
     report = generate_monitoring_report()
 
     return {
@@ -281,17 +293,24 @@ def monitoring_stats():
         "average_probability": float(report["average_probability"]),
         "average_latency_seconds": float(report["average_latency_seconds"]),
         "p95_latency_seconds": float(report["p95_latency_seconds"]),
-        "max_latency_seconds": float(report["max_latency_seconds"])
+        "max_latency_seconds": float(report["max_latency_seconds"]),
     }
+
 
 @app.get("/monitoring/features")
 def feature_monitoring():
 
     report = generate_monitoring_report()
 
-    return  report["feature_stats"]
+    return report["feature_stats"]
+
 
 @app.get("/monitoring/drift")
 def monitoring_drift():
 
     return generate_drift_report()
+
+
+@app.get("/evaluation")
+def evaluation_report():
+    return generate_evaluation_report()

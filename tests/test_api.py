@@ -9,14 +9,17 @@ def client():
     from unittest.mock import MagicMock
     import app.model_loader as ml
 
-    # Mock model
     ml.model = MagicMock()
     ml.threshold = 0.5
 
     ml.model.predict.return_value = [1]
     ml.model.predict_proba.return_value = np.array([[0.2, 0.8]])
 
-    # ADD THESE (CRITICAL)
+    ml.explainer = MagicMock()
+    ml.explainer.shap_values.return_value = np.array(
+        [[0.5, 0.2, -0.1, 0.05, 0.01, 0.3, 0.4, 0.1]]
+    )
+
     ml.imputer = {
         "replace_value": None,
         "DR1TKCAL": 2000,
@@ -44,6 +47,27 @@ def client():
     from app.main import app
 
     return TestClient(app)
+
+
+@pytest.fixture
+def sample_payload():
+    return {
+        "RIDAGEYR": 35,
+        "RIAGENDR": 1,
+        "BMXBMI": 27.5,
+        "PAQ605": 2,
+        "PAQ620": 3,
+        "SLD012": 7,
+        "INDFMMPI": 2.5,
+        "BPQ020": 1,
+        "DR1TKCAL": 2200,
+        "DR1TSUGR": 60,
+        "DR1TTFAT": 70,
+        "DR1TPROT": 80,
+        "DR1TSODI": 2500,
+        "DBD895": 4,
+        "DBD900": 2,
+    }
 
 
 # 1. Health endpoint test
@@ -128,32 +152,15 @@ def test_batch_predict(client):
 
 
 # 5. Missing values handling test
-def test_missing_values_handling(client):
-    payload = {
-        "RIDAGEYR": 40,
-        "RIAGENDR": 1,
-        "BMXBMI": 30,
-        "PAQ605": 1,
-        "PAQ620": 2,
-        "SLD012": None,
-        "INDFMMPI": None,
-        "BPQ020": 2,
-        "DR1TKCAL": None,
-        "DR1TSUGR": None,
-        "DR1TTFAT": 70,
-        "DR1TPROT": 80,
-        "DR1TSODI": None,
-        "DBD895": 3,
-        "DBD900": None,
-    }
+def test_missing_values_handling(client, sample_payload):
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/predict", json=sample_payload)
 
     # Should still work due to imputation
     assert response.status_code == 200
 
 
-def test_threshold_behavior(client):
+def test_threshold_behavior(client, sample_payload):
     import app.model_loader as ml
     import numpy as np
 
@@ -161,104 +168,110 @@ def test_threshold_behavior(client):
     ml.model.predict_proba.return_value = np.array([[0.8, 0.2]])
     ml.threshold = 0.5
 
-    payload = {
-        "RIDAGEYR": 35,
-        "RIAGENDR": 1,
-        "BMXBMI": 27.5,
-        "PAQ605": 2,
-        "PAQ620": 3,
-        "SLD012": 7,
-        "INDFMMPI": 2.5,
-        "BPQ020": 1,
-        "DR1TKCAL": 2200,
-        "DR1TSUGR": 60,
-        "DR1TTFAT": 70,
-        "DR1TPROT": 80,
-        "DR1TSODI": 2500,
-        "DBD895": 4,
-        "DBD900": 2,
-    }
-
-    response = client.post("/predict", json=payload)
+    response = client.post("/predict", json=sample_payload)
     data = response.json()
 
     assert data["prediction"] == 0
 
 
-def test_batch_vs_single_consistency(client):
-    payload = {
-        "RIDAGEYR": 35,
-        "RIAGENDR": 1,
-        "BMXBMI": 27.5,
-        "PAQ605": 2,
-        "PAQ620": 3,
-        "SLD012": 7,
-        "INDFMMPI": 2.5,
-        "BPQ020": 1,
-        "DR1TKCAL": 2200,
-        "DR1TSUGR": 60,
-        "DR1TTFAT": 70,
-        "DR1TPROT": 80,
-        "DR1TSODI": 2500,
-        "DBD895": 4,
-        "DBD900": 2,
-    }
+def test_batch_vs_single_consistency(client, sample_payload):
 
-    single = client.post("/predict", json=payload).json()
+    single = client.post("/predict", json=sample_payload).json()
 
-    batch = client.post("/batch_predict", json={"records": [payload]}).json()
+    batch = client.post("/batch_predict", json={"records": [sample_payload]}).json()
 
     assert single["prediction"] == batch["results"][0]["prediction"]
 
 
-def test_model_failure(client):
+def test_model_failure(client, sample_payload):
 
     with patch(
         "app.model_loader.model.predict_proba", side_effect=Exception("Model crashed")
     ):
 
-        payload = {
-            "RIDAGEYR": 35,
-            "RIAGENDR": 1,
-            "BMXBMI": 27.5,
-            "PAQ605": 2,
-            "PAQ620": 3,
-            "SLD012": 7,
-            "INDFMMPI": 2.5,
-            "BPQ020": 1,
-            "DR1TKCAL": 2200,
-            "DR1TSUGR": 60,
-            "DR1TTFAT": 70,
-            "DR1TPROT": 80,
-            "DR1TSODI": 2500,
-            "DBD895": 4,
-            "DBD900": 2,
-        }
-
-        response = client.post("/predict", json=payload)
+        response = client.post("/predict", json=sample_payload)
 
         assert response.status_code == 500
 
 
-def test_invalid_gender(client):
-    payload = {
-        "RIDAGEYR": 45,
-        "RIAGENDR": -1,  # invalid
-        "BMXBMI": 28.5,
-        "PAQ620": 3.0,
-        "SLD012": 7.0,
-        "PAQ605": 1,
-        "INDFMMPI": 2.5,
-        "BPQ020": 1.0,
-        "DR1TKCAL": 2000,
-        "DR1TSUGR": 50,
-        "DR1TTFAT": 65,
-        "DR1TPROT": 75,
-        "DR1TSODI": 2300,
-        "DBD895": 15,
-        "DBD900": 2,
-    }
+def test_invalid_gender(client, sample_payload):
+    sample_payload["RIAGENDR"] = -1
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/predict", json=sample_payload)
 
     assert response.status_code == 422
+
+
+def test_shap_factors_present(client, sample_payload):
+
+    response = client.post("/predict", json=sample_payload)
+
+    data = response.json()
+
+    assert "top_factors" in data
+    assert len(data["top_factors"]) > 0
+
+
+def test_shap_factor_schema(client, sample_payload):
+
+    response = client.post("/predict", json=sample_payload)
+
+    factor = response.json()["top_factors"][0]
+
+    assert "feature" in factor
+    assert "value" in factor
+    assert "impact" in factor
+
+
+def test_explanation_generated(client, sample_payload):
+    response = client.post("/predict", json=sample_payload)
+
+    assert "explanation" in response.json()
+
+
+def test_explanation_not_empty(client, sample_payload):
+    response = client.post("/predict", json=sample_payload)
+
+    explanation = response.json()["explanation"]
+
+    assert len(explanation) > 20
+
+
+def test_monitoring_endpoint(client):
+    response = client.get("/monitoring")
+
+    assert response.status_code == 200
+
+
+def test_monitoring_contains_latency(client):
+    response = client.get("/monitoring")
+
+    assert "average_latency_seconds" in response.json()
+
+
+def test_monitoring_contains_distribution(client):
+    response = client.get("/monitoring")
+
+    assert "prediction_distribution" in response.json()
+
+
+def test_drift_endpoint(client):
+    response = client.get("/monitoring/drift")
+
+    assert response.status_code == 200
+
+
+def test_drift_summary_exists(client):
+    response = client.get("/monitoring/drift")
+
+    assert "summary" in response.json()
+
+
+def test_prediction_under_5_seconds(client, sample_payload):
+    response = client.post("/predict", json=sample_payload)
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["latency_seconds"] < 5

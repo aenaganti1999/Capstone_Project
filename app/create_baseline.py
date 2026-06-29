@@ -1,11 +1,10 @@
 import json
-import joblib
 import pandas as pd
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-X_TRAIN_PATH = BASE_DIR / "artifacts" / "data"/ "X_train.csv"
+X_TRAIN_PATH = BASE_DIR / "artifacts" / "data" / "X_train.csv"
 BASELINE_PATH = BASE_DIR / "baseline_stats.json"
 
 FEATURES = [
@@ -48,6 +47,7 @@ FEATURES = [
 
 #     print(f"Baseline stats saved to {BASELINE_PATH}")
 
+
 def create_baseline_stats():
     X_train = pd.read_csv(X_TRAIN_PATH)
 
@@ -81,6 +81,7 @@ def create_baseline_stats():
         json.dump(baseline_stats, f, indent=2)
 
     print("Finished writing file")
+
 
 if __name__ == "__main__":
     create_baseline_stats()

@@ -19,8 +19,4 @@ def save_prediction(prediction_data):
     predictions.append(prediction_data)
 
     with open(PREDICTION_FILE, "w") as f:
-        json.dump(
-            predictions,
-            f,
-            indent=4
-        )
+        json.dump(predictions, f, indent=4)
