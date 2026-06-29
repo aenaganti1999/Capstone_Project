@@ -1,0 +1,16 @@
+.data
+.model
+.env
+.venv
+
+uv.lock
+
+predictions.json
+baseline_stats.json
+evaluation_report.json
+
+logs
+
+additional
+.DS_Store
+__pycache__/
