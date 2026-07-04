@@ -2,6 +2,7 @@ import joblib
 from pathlib import Path
 import shap
 from app.services.artifact_service import download_required_artifacts
+
 # globals (initially empty)
 model = None
 imputer = None
