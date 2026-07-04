@@ -28,6 +28,12 @@ jobs:
     - name: Install dependencies
       run: uv sync
 
+    - name: Debug files
+      run: |
+        pwd
+        ls -la
+        find . -name "baseline_stats.json"
+
     - name: Run linting
       run: |
         uv run flake8 app tests --max-line-length=88
