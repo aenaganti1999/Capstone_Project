@@ -7,9 +7,9 @@ from app.preprocess import preprocess_input
 BASE_DIR = Path(__file__).resolve().parent.parent
 baseline_path = BASE_DIR / "baseline_stats.json"
 
-def load_predictions():
 
-    with open("predictions.json", "r") as f:
+def load_predictions():
+    with open(BASE_DIR / "predictions.json", "r") as f:
         data = json.load(f)
 
     print(data[0])
