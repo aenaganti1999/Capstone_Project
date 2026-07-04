@@ -4,6 +4,8 @@ import numpy as np
 from pathlib import Path
 from app.preprocess import preprocess_input
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+baseline_path = BASE_DIR / "baseline_stats.json"
 
 def load_predictions():
 
@@ -103,7 +105,7 @@ def generate_drift_report():
     df = df[df["input_data"].notna()]
     print(Path("baseline_stats.json").resolve())
 
-    with open("baseline_stats.json", "r") as f:
+    with baseline_path.open("r") as f:
 
         content = f.read()
 

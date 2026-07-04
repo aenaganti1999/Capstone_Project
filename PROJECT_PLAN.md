@@ -221,3 +221,9 @@ Activities:
 ---
 
 
+So we have two pipelines, 
+
+1. Training Pipeline
+
+2. Inference Pipeline
+
