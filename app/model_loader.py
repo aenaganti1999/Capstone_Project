@@ -1,7 +1,7 @@
 import joblib
 from pathlib import Path
 import shap
-
+from app.services.artifact_service import download_required_artifacts
 # globals (initially empty)
 model = None
 imputer = None
@@ -14,6 +14,9 @@ def load_artifacts():
     global model, imputer, train_columns, threshold, explainer
 
     if model is None or not hasattr(model, "predict"):
+
+        download_required_artifacts()
+
         base_path = Path("artifacts")
 
         model = joblib.load(base_path / "model" / "model.joblib")

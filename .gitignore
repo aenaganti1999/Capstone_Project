@@ -3,9 +3,11 @@
 .env
 .venv
 
-predictions.json
+artifacts
+
 baseline_stats.json
 evaluation_report.json
+predictions.json
 
 logs
 
