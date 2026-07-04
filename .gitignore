@@ -3,7 +3,6 @@
 .env
 .venv
 
-artifacts/model
 
 baseline_stats.json
 evaluation_report.json
