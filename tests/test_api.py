@@ -7,6 +7,8 @@ import pytest
 @pytest.fixture
 def client():
     from unittest.mock import MagicMock
+    import json
+    from pathlib import Path
     import app.model_loader as ml
 
     ml.model = MagicMock()
@@ -43,6 +45,19 @@ def client():
         "log_calories",
         "log_sodium",
     ]
+
+    baseline = {
+        "protein_ratio": {"mean": 0.03},
+        "sugar_ratio": {"mean": 0.04},
+        "sodium_density": {"mean": 1.3},
+        "fast_food_ratio": {"mean": 0.5},
+        "calorie_activity": {"mean": 1000},
+        "fat_calorie_ratio": {"mean": 0.03},
+        "log_calories": {"mean": 7.6},
+        "log_sodium": {"mean": 7.9},
+    }
+
+    Path("baseline_stats.json").write_text(json.dumps(baseline))
 
     from app.main import app
 
