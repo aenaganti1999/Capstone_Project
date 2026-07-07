@@ -65,7 +65,7 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/obesity-api:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/obesity-api:${{ github.sha }}
 
-    deploy:
+  deploy:
     name: Deploy to EC2
     needs: build
     runs-on: ubuntu-latest
