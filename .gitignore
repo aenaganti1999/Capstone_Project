@@ -1,5 +1,15 @@
 .data
 .model
+.env
+.venv
+
+
+baseline_stats.json
+evaluation_report.json
+predictions.json
+
+logs
+
 additional
 .DS_Store
 __pycache__/

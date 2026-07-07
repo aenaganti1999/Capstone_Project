@@ -24,8 +24,27 @@ class BatchPredictionInput(BaseModel):
     records: List[PredictionInput]
 
 
+class ExplanationFactor(BaseModel):
+    feature: str
+    value: float
+    impact: float
+
+
+class ExplainRequest(BaseModel):
+    prediction: int
+    probability: float
+    top_factors: list[ExplanationFactor]
+    input_data: PredictionInput
+
+
+class ExplainResponse(BaseModel):
+    explanation: str
+
+
 class PredictionResponse(BaseModel):
     prediction: int
     probability: float
     threshold: float
     latency_seconds: float
+    top_factors: List[ExplanationFactor]
+    explanation: str

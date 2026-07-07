@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import Union, List
-import app.model_loader as ml
+from app import model_loader as ml
 
 
 def preprocess_input(data: Union[dict, List[dict]]) -> pd.DataFrame:
@@ -98,5 +98,5 @@ def preprocess_input(data: Union[dict, List[dict]]) -> pd.DataFrame:
 
     # Align columns to match training schema
     df = df.reindex(columns=ml.train_columns, fill_value=0)
-
+    print(df)
     return df
