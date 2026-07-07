@@ -65,29 +65,4 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/obesity-api:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/obesity-api:${{ github.sha }}
 
-  deploy:
-    name: Deploy to EC2
-    needs: build
-    runs-on: ubuntu-latest
-
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/obesity-api:latest
-
-            docker stop obesity-api || true
-            docker rm obesity-api || true
-
-            docker run -d \
-              --name obesity-api \
-              --restart unless-stopped \
-              -p 8000:8000 \
-              ${{ secrets.DOCKER_USERNAME }}/obesity-api:latest
-    
+  
