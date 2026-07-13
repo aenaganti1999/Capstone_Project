@@ -1,6 +1,6 @@
-# Obesity Risk Prediction API
+# Obesity Risk Prediction Platform
 
-**FastAPI ML service** predicting obesity risk from lifestyle factors (diet, activity, sleep). Built with Python, XGBoost, and deployed on AWS EC2 and accessible via a live API endpoint
+Production-ready machine learning platform that predicts obesity risk from lifestyle, dietary, and health indicators using XGBoost. The platform integrates automated feature engineering, SHAP-based explainability, LLM-generated prediction summaries, monitoring, Dockerized deployment, and GitHub Actions CI/CD, and is continuously deployed on AWS EC2.
 
 ## Model Performance
 
@@ -11,7 +11,49 @@
 ## System Architecture
 
 ```
-Client → FastAPI → Validation → Preprocessing (feature engineering) → Model → Response
+
+ Validation
+      │
+Feature Engineering
+      │
+XGBoost Inference
+      │
+SHAP Explainability
+      │
+LLM Explanation
+      │
+Monitoring & Logging
+      │
+JSON Response
+
+
+```
+## Production Architecture
+
+                    GitHub
+                       │
+                 Push / Pull Request
+                       │
+             GitHub Actions CI/CD
+        (Tests • Lint • Docker Build)
+                       │
+                 Docker Image
+                       │
+                Deploy to AWS EC2
+                       │
+                 FastAPI Application
+                       │
+      ┌────────────┬─────────────┬──────────────┐
+      │            │             │              │
+ Validation   Feature Eng.   XGBoost Model   Prediction
+      │            │             │              │
+      └────────────┴─────────────┘──────────────┘
+                       │
+          SHAP Explainability Engine
+                       │
+          Monitoring & Logging Layer
+                       │
+                JSON API Response
 ```
 
 **Components:**
@@ -22,12 +64,18 @@ Client → FastAPI → Validation → Preprocessing (feature engineering) → Mo
 
 ## Key Features
 
-- FastAPI-based ML inference API
-- Real-time predictions with latency tracking
-- Batch prediction support
-- CI pipeline with GitHub Actions
+- FastAPI REST API for real-time predictions
+- XGBoost classification model
+- Automated feature engineering pipeline
+- SHAP-based explainable AI
+- LLM-generated human-readable prediction explanations
+- Real-time prediction latency tracking
+- Prediction monitoring endpoints
+- Batch inference support
+- Structured request validation using Pydantic
 - Dockerized deployment
-- Hosted on AWS EC2
+- GitHub Actions CI/CD
+- Continuous deployment to AWS EC2
 
 ## Quick Start
 
@@ -51,6 +99,80 @@ http://localhost:8000/docs
 - Python 3.11+ or Docker
 - 8GB RAM
 - Port 8000 available
+
+---
+
+## Model Overview
+
+| Metric | Value |
+|--------|-------|
+| Algorithm | XGBoost + Feature Engineering |
+| Training Data | NHANES (10K individuals) |
+| Features | 16 input → 40+ engineered |
+| Recall | 89% |
+| Precision | 46% |
+| F1-Score | 60% |
+
+**Feature engineering:** Dietary ratios, activity metrics, log transformations, missing indicators.
+
+---
+
+# Explainable AI
+
+The platform integrates **SHAP (SHapley Additive Explanations)** to improve transparency and interpretability of every prediction.
+
+### Explainability Features
+
+- Global feature importance
+- Local prediction explanations
+- SHAP summary plots
+- Waterfall plots
+- Feature contribution analysis
+- Human-readable explanations generated using an LLM
+
+This enables both developers and end users to understand *why* the model produced a prediction instead of treating it as a black box.
+
+---
+
+# Monitoring
+
+The platform continuously tracks inference behavior to improve reliability and detect potential issues.
+
+### API Monitoring
+
+- Request latency
+- Average inference time
+- Request count
+- Error count
+- Endpoint health
+
+### Model Monitoring
+
+- Prediction class distribution
+- Feature distribution statistics
+- Missing feature monitoring
+- Schema validation failuress
+
+Monitoring endpoints can be used to inspect model health during deployment.
+
+---
+
+# Logging
+
+Structured JSON logging is implemented throughout the application to support request tracing, debugging, and production monitoring.
+
+Each request records
+
+- Request ID
+- Timestamp
+- Endpoint
+- Prediction probability
+- Prediction latency
+- Error details 
+
+# Deployment
+
+The application is continuously deployed to an Amazon EC2 instance.
 
 ---
 
@@ -91,14 +213,34 @@ curl -X POST http://localhost:8000/predict \
 **Response:**
 ```json
 {
+  "prediction_id": "dd443577-5c55-43ca-a193-2e2cafe4290a",
+  "timestamp": "2026-07-06T20:19:08.082826+00:00",
   "prediction": 1,
-  "probability": 0.75,
-  "threshold": 0.35,
-  "latency_seconds": 0.052
+  "probability": 0.80,
+
+  "top_factors": [
+    {
+      "feature": "Protein Ratio",
+      "value": 0.036,
+      "impact": 0.50
+    },
+    {
+      "feature": "Log Calories",
+      "value": 7.69,
+      "impact": 0.40
+    },
+    {
+      "feature": "Calories From Fat",
+      "value": 0.032,
+      "impact": 0.30
+    }
+  ],
+
+  "explanation": "The model predicts obesity with an 80% probability. The strongest contributors were Protein Ratio, Log Calories, and Calories From Fat.",
+
+  "latency_seconds": 1.86
 }
 ```
-
-Fields: `prediction` (0/1), `probability` (0-1), `threshold`,`latency_seconds`
 
 ### `/batch_predict` (POST)
 Multiple predictions: `{"records": [...]}`
@@ -107,35 +249,14 @@ See [Swagger UI](http://localhost:8000/docs) for full schema.
 
 ---
 
-## Model Overview
+## `/monitor` (GET)
 
-| Metric | Value |
-|--------|-------|
-| Algorithm | XGBoost + Feature Engineering |
-| Training Data | NHANES (10K individuals) |
-| Features | 16 input → 40+ engineered |
-| Recall | 89% |
-| Precision | 46% |
-| F1-Score | 60% |
+Returns monitoring statistics including
 
-**Feature engineering:** Dietary ratios, activity metrics, log transformations, missing indicators.
-
----
-
-## Project Structure
-
-```
-app/
-  ├── main.py           # FastAPI endpoints
-  ├── model_loader.py   # Artifact loading
-  ├── preprocess.py     # Feature engineering
-  └── schema.py         # Pydantic validation
-artifacts/
-  ├── model/            # model.joblib, threshold, etc.
-  └── data/             # Training/test splits
-tests/
-  └── test_api.py       # Unit tests (pytest)
-```
+- prediction distribution
+- average latency
+- request count
+- feature statistics
 
 ---
 
@@ -149,31 +270,6 @@ pytest --cov=app tests/
 # Interactive testing
 Open http://localhost:8000/docs (Swagger UI)
 ```
-
----
-
-## Deployment
-
-**Local:**
-```bash
-uvicorn app.main:app --reload
-```
-
-**Docker:**
-```bash
-docker build -t obesity-api:1.0 .
-docker run -p 8000:8000 -v $(pwd)/artifacts:/app/artifacts obesity-api:1.0
-```
-
-**Production (AWS EC2):**
-```bash
-ssh -i key.pem ubuntu@ec2-ip
-git clone repo && cd repo
-docker-compose up -d
-```
-
-Access at: `http://your-ec2-ip:8000/docs`
-
 ---
 
 ## CI Pipeline
@@ -185,11 +281,40 @@ Access at: `http://your-ec2-ip:8000/docs`
 
 See `.github/workflows/ci.yml` for details.
 
+## CD Pipeline
+
+After the CI pipeline completes successfully, the application is automatically deployed to an Amazon EC2 instance.
+
 ## Deployment
 
-- Application is manually deployed on an Amazon EC2 instance for low-cost hosting
+### Production
 
----
+The application is deployed on an Amazon EC2 instance using Docker Compose.
+
+The deployed service exposes:
+
+- `/docs` – Interactive Swagger UI
+- `/health` – Health check endpoint
+- `/predict` – Single prediction
+- `/batch_predict` – Batch prediction
+- `/monitor` – Monitoring metrics
+
+### Local
+
+```bash
+uv sync
+uvicorn app.main:app --reload
+```
+API Documentation
+```bash
+http://localhost:8000/docs
+
+```
+### Production
+
+The application is hosted on an Amazon EC2 instance using Docker Compose.
+
+Live API documentation is available on the deployed EC2 instance.
 
 ## Performance
 
@@ -205,6 +330,7 @@ See `.github/workflows/ci.yml` for details.
 - **Framework:** FastAPI, Uvicorn
 - **ML:** XGBoost, Scikit-learn, Pandas, NumPy
 - **Validation:** Pydantic v2
+- **Explainability:** SHAP
 - **Testing:** Pytest, HTTPx
 - **Containerization:** Docker, Docker Compose
 - **Deployment:** AWS EC2
@@ -220,4 +346,4 @@ See `.github/workflows/ci.yml` for details.
 
 ---
 
-**Status:** Production-Ready Prototype | **Version:** 1.1.0 | **Last Updated:** April 28, 2026
+**Status:** Production-Ready Prototype | **Version:** 1.1.0 | **Last Updated:** July 13, 2026
