@@ -1,118 +1,31 @@
 import json
-import pandas as pd
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
 from app.preprocess import preprocess_input
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-baseline_path = BASE_DIR / "baseline_stats.json"
+
+BASELINE_PATH = BASE_DIR / "baseline_stats.json"
+PREDICTIONS_PATH = BASE_DIR / "predictions.json"
+
+LOW_SHIFT_THRESHOLD = 10
+MEDIUM_SHIFT_THRESHOLD = 25
 
 
 def load_predictions():
-    with open(BASE_DIR / "predictions.json", "r") as f:
+    with open(PREDICTIONS_PATH, "r") as f:
         data = json.load(f)
-
-    print(data[0])
 
     return pd.DataFrame(data)
 
 
-def generate_monitoring_report():
-
-    df = load_predictions()
-
-    df = df[df["input_data"].notna()]
-
-    total_predictions = len(df)
-
-    feature_stats = {}
-
-    features = [
-        "RIDAGEYR",
-        "RIAGENDR",
-        "BMXBMI",
-        "PAQ605",
-        "PAQ620",
-        "SLD012",
-        "INDFMMPI",
-        "BPQ020",
-        "DR1TKCAL",
-        "DR1TSUGR",
-        "DR1TTFAT",
-        "DR1TPROT",
-        "DR1TSODI",
-        "DBD895",
-        "DBD900",
-    ]
-
-    for feature in features:
-
-        values = []
-
-        for row in df["input_data"]:
-
-            if not isinstance(row, dict):
-
-                continue
-
-            value = row.get(feature)
-
-            if value is not None:
-
-                values.append(float(value))
-
-        if values:
-
-            feature_stats[feature] = {
-                "count": int(len(values)),
-                "mean": float(round(np.mean(values), 2)),
-                "std": float(round(np.std(values), 2)),
-                "min": float(round(np.min(values), 2)),
-                "max": float(round(np.max(values), 2)),
-            }
-
-    positive_rate = (df["prediction"] == 1).mean()
-
-    negative_rate = (df["prediction"] == 0).mean()
-
-    avg_probability = df["probability"].mean()
-
-    avg_latency = df["latency_seconds"].mean()
-
-    p95_latency = df["latency_seconds"].quantile(0.95)
-
-    max_latency = df["latency_seconds"].max()
-
-    prediction_counts = df["prediction"].astype(str).value_counts().to_dict()
-
-    return {
-        "total_predictions": total_predictions,
-        "positive_rate": float(positive_rate),
-        "negative_rate": float(negative_rate),
-        "average_probability": float(avg_probability),
-        "average_latency_seconds": float(avg_latency),
-        "p95_latency_seconds": float(p95_latency),
-        "max_latency_seconds": float(max_latency),
-        "prediction_distribution": prediction_counts,
-        "feature_stats": feature_stats,
-    }
-
-
-def generate_drift_report():
-
-    df = load_predictions()
-
-    df = df[df["input_data"].notna()]
-    print(Path("baseline_stats.json").resolve())
-
-    with baseline_path.open("r") as f:
-
-        content = f.read()
-
-        print("content:")
-        print(repr(content))
-
-        baseline_stats = json.loads(content)
+def extract_production_features(df: pd.DataFrame) -> dict:
+    """
+    Extract all production feature values after preprocessing.
+    """
 
     production_features = {}
 
@@ -122,61 +35,162 @@ def generate_drift_report():
             continue
 
         processed = preprocess_input(row)
-
         processed_dict = processed.iloc[0].to_dict()
 
         for feature, value in processed_dict.items():
 
             production_features.setdefault(feature, []).append(float(value))
 
-    drift_report = {}
+    return production_features
 
-    high_drift = 0
-    medium_drift = 0
-    low_drift = 0
 
-    for feature in baseline_stats:
+def generate_monitoring_report():
+
+    df = load_predictions()
+    df = df[df["input_data"].notna()]
+
+    total_predictions = len(df)
+
+    production_features = extract_production_features(df)
+
+    feature_stats = {}
+
+    for feature, values in production_features.items():
+
+        feature_stats[feature] = {
+            "count": len(values),
+            "mean": round(float(np.mean(values)), 2),
+            "std": round(float(np.std(values)), 2),
+            "min": round(float(np.min(values)), 2),
+            "max": round(float(np.max(values)), 2),
+        }
+
+    positive_rate = (df["prediction"] == 1).mean()
+    negative_rate = (df["prediction"] == 0).mean()
+
+    avg_probability = df["probability"].mean()
+
+    avg_latency = df["latency_seconds"].mean()
+    p95_latency = df["latency_seconds"].quantile(0.95)
+    max_latency = df["latency_seconds"].max()
+
+    prediction_counts = (
+        df["prediction"]
+        .astype(str)
+        .value_counts()
+        .to_dict()
+    )
+
+    return {
+
+        "total_predictions": total_predictions,
+
+        "positive_rate": float(positive_rate),
+
+        "negative_rate": float(negative_rate),
+
+        "average_probability": float(avg_probability),
+
+        "average_latency_seconds": float(avg_latency),
+
+        "p95_latency_seconds": float(p95_latency),
+
+        "max_latency_seconds": float(max_latency),
+
+        "prediction_distribution": prediction_counts,
+
+        "feature_stats": feature_stats,
+    }
+
+
+def generate_drift_report():
+
+    df = load_predictions()
+    df = df[df["input_data"].notna()]
+
+    with BASELINE_PATH.open("r") as f:
+        baseline_stats = json.load(f)
+
+    production_features = extract_production_features(df)
+
+    feature_report = {}
+
+    low_shift = 0
+    medium_shift = 0
+    high_shift = 0
+
+    for feature, train_stats in baseline_stats.items():
 
         if feature not in production_features:
             continue
 
-        train_mean = baseline_stats[feature]["mean"]
+        production_values = production_features[feature]
 
-        prod_mean = np.mean(production_features[feature])
+        train_mean = train_stats["mean"]
+        train_std = train_stats["std"]
+        train_min = train_stats["min"]
+        train_max = train_stats["max"]
 
-        drift_pct = (abs(prod_mean - train_mean) / max(abs(train_mean), 0.0001)) * 100
+        prod_mean = float(np.mean(production_values))
+        prod_std = float(np.std(production_values))
+        prod_min = float(np.min(production_values))
+        prod_max = float(np.max(production_values))
 
-        if drift_pct < 10:
+        mean_shift = prod_mean - train_mean
+
+        mean_shift_percent = (
+            abs(mean_shift)
+            / max(abs(train_mean), 1e-6)
+        ) * 100
+
+        if mean_shift_percent < LOW_SHIFT_THRESHOLD:
+
             status = "LOW"
+            low_shift += 1
 
-        elif drift_pct < 25:
+        elif mean_shift_percent < MEDIUM_SHIFT_THRESHOLD:
+
             status = "MEDIUM"
+            medium_shift += 1
 
         else:
+
             status = "HIGH"
+            high_shift += 1
 
-        if status == "HIGH":
-            high_drift += 1
+        feature_report[feature] = {
 
-        elif status == "MEDIUM":
-            medium_drift += 1
+            "training_mean": round(train_mean, 2),
+            "production_mean": round(prod_mean, 2),
 
-        else:
-            low_drift += 1
+            "training_std": round(train_std, 2),
+            "production_std": round(prod_std, 2),
 
-        drift_report[feature] = {
-            "training_mean": round(float(train_mean), 2),
-            "production_mean": round(float(prod_mean), 2),
-            "drift_percent": round(float(drift_pct), 2),
+            "training_min": round(train_min, 2),
+            "production_min": round(prod_min, 2),
+
+            "training_max": round(train_max, 2),
+            "production_max": round(prod_max, 2),
+
+            "mean_shift": round(mean_shift, 2),
+
+            "mean_shift_percent": round(mean_shift_percent, 2),
+
             "status": status,
         }
 
     return {
+
         "summary": {
-            "total_features": len(drift_report),
-            "high_drift": high_drift,
-            "medium_drift": medium_drift,
-            "low_drift": low_drift,
+
+            "total_features": len(feature_report),
+
+            "high_shift": high_shift,
+
+            "medium_shift": medium_shift,
+
+            "low_shift": low_shift,
         },
-        "features": drift_report,
+
+        "features": feature_report,
     }
