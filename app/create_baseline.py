@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 from pathlib import Path
+import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -63,13 +64,23 @@ def create_baseline_stats():
 
         values = X_train[feature].dropna()
 
-        baseline_stats[feature] = {
-            "count": int(values.count()),
-            "mean": float(round(values.mean(), 2)),
-            "std": float(round(values.std(), 2)),
-            "min": float(round(values.min(), 2)),
-            "max": float(round(values.max(), 2)),
-        }
+        histogram, bin_edges = np.histogram(
+    values,
+    bins=10
+)
+
+    baseline_stats[feature] = {
+
+    "count": int(values.count()),
+    "mean": float(round(values.mean(), 2)),
+    "median": float(round(values.median(),2)),
+    "std": float(round(values.std(), 2)),
+    "min": float(round(values.min(), 2)),
+    "max": float(round(values.max(), 2)),
+    "histogram": histogram.tolist(),
+    "values": values.tolist(),
+    "bin_edges": [round(float(x), 4) for x in bin_edges]
+    }
 
     print("Created baseline stats")
     print(f"Number of features saved: {len(baseline_stats)}")
