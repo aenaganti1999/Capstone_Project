@@ -61,10 +61,7 @@ def create_baseline_stats():
 
         values = X_train[feature].dropna()
 
-        histogram, bin_edges = np.histogram(
-            values,
-            bins=10
-            )
+        histogram, bin_edges = np.histogram(values, bins=10)
 
         baseline_stats[feature] = {
             "count": int(values.count()),
@@ -75,11 +72,8 @@ def create_baseline_stats():
             "max": float(round(values.max(), 2)),
             "histogram": histogram.tolist(),
             "values": values.tolist(),
-            "bin_edges": [
-                round(float(x), 4)
-                for x in bin_edges
-                ],
-            }
+            "bin_edges": [round(float(x), 4) for x in bin_edges],
+        }
 
     with open(BASELINE_PATH, "w") as f:
         json.dump(baseline_stats, f, indent=2)
