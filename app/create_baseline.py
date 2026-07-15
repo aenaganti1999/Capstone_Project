@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import numpy as np
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,13 +50,10 @@ FEATURES = [
 
 
 def create_baseline_stats():
+
     X_train = pd.read_csv(X_TRAIN_PATH)
 
     FEATURES = X_train.columns.tolist()
-
-    print("Loaded training data")
-    print(f"Rows: {len(X_train)}")
-    print(f"Features: {len(FEATURES)}")
 
     baseline_stats = {}
 
@@ -63,19 +61,19 @@ def create_baseline_stats():
 
         values = X_train[feature].dropna()
 
+        histogram, bin_edges = np.histogram(values, bins=10)
+
         baseline_stats[feature] = {
             "count": int(values.count()),
             "mean": float(round(values.mean(), 2)),
+            "median": float(round(values.median(), 2)),
             "std": float(round(values.std(), 2)),
             "min": float(round(values.min(), 2)),
             "max": float(round(values.max(), 2)),
+            "histogram": histogram.tolist(),
+            "values": values.tolist(),
+            "bin_edges": [round(float(x), 4) for x in bin_edges],
         }
-
-    print("Created baseline stats")
-    print(f"Number of features saved: {len(baseline_stats)}")
-
-    print("Writing file to:")
-    print(BASELINE_PATH)
 
     with open(BASELINE_PATH, "w") as f:
         json.dump(baseline_stats, f, indent=2)
